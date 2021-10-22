@@ -35,9 +35,6 @@ void MCTS::backpropagate(Node *nodeToExplore, int result) {
         if (result == Board::P1) {
             node->incrementWins();
         }
-        else if (result == Board::DRAW) {
-            node->incrementDraws();
-        }
         node = node->getParent();
     }
 }

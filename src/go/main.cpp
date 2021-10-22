@@ -24,7 +24,7 @@ int main()
     }
     board.printStatus(); */
 
-    srand(time(NULL));
+    /*srand(time(NULL));
     int draws = 0, winsP1 = 0, winsP2 = 0;
     for (int i = 0; i < 1; ++i) {
         Board board;
@@ -34,10 +34,7 @@ int main()
             playerTurn = Board::getOpponent(playerTurn);
         }
         int status = board.getStatus();
-        if (status == Board::DRAW) {
-            draws++;
-        }
-        else if (status == Board::P1) {
+        if (status == Board::P1) {
             winsP1++;
         }
         else {
@@ -45,7 +42,7 @@ int main()
         }
     }
     cout << "draws: " << draws << "\nwins X: " << winsP1 << "\nwins 0: " << winsP2 << "\n";
-
+    */
     /* srand(time(NULL));
     int **v = new int*[3];
     for (int i = 0; i < 3; ++i) {
@@ -70,6 +67,17 @@ int main()
     //    cout << "----------\n";
     // }
     MCTS::getNextMove(board, 2).printBoard(); */
+    int **v = new int*[5];
+    for (int i = 0; i < 5; ++i) {
+        v[i] = new int[5]();
+    }
+    v[0][0] = 0; v[0][1] = 1; v[0][2] = 2; v[0][3] = 0; v[0][4] = 0;
+    v[1][0] = 1; v[1][1] = 0; v[1][2] = 1; v[1][3] = 2; v[1][4] = 0;
+    v[2][0] = 0; v[2][1] = 1; v[2][2] = 2; v[2][3] = 0; v[2][4] = 0;
+    v[3][0] = 0; v[3][1] = 0; v[3][2] = 0; v[3][3] = 0; v[3][4] = 0;
+    v[4][0] = 0; v[4][1] = 0; v[4][2] = 0; v[4][3] = 0; v[4][4] = 0;
+    Board board(5, v);
+    cout << (board.isSuicideMove(2, Position(1,1)) ? "is suicide\n" : "isn't suicide\n");
 
 
     return 0;

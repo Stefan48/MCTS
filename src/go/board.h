@@ -8,13 +8,13 @@ using namespace std;
 class Board {
     int boardSize;
     int **board = NULL;
+    Board *prevBoard = NULL;
 
 public:
     const static int ONGOING = 0;
     const static int P1 = 1;
     const static int P2 = 2;
-    const static int DRAW = 3;
-    const static int DEFAULT_BOARD_SIZE = 3;
+    const static int DEFAULT_BOARD_SIZE = 19;
     const static int EMPTY = 0;
 
     static int getOpponent(int player);
@@ -32,8 +32,11 @@ public:
     int getStatus();
     void printBoard();
     void printStatus();
-    vector<Position> getValidMoves();
+    vector<Position> getValidMoves(int player);
     void applyMove(int player, Position pos);
+    bool isSuicideMove(int player, Position pos);
+    bool isKoMove(Board board, Position pos);
+    bool chainHasLiberties(int player, Position pos, bool** visited);
 };
 
 #endif // __BOARD_H__

@@ -141,19 +141,6 @@ int Board::getStatus() {
             return board[0][boardSize-1];
         }
     }
-    /* check for draw */
-    bool gameEnd = true;
-    for (int i = 0; i < boardSize; ++i) {
-        for (int j = 0; j < boardSize; ++j) {
-            if (board[i][j] == EMPTY) {
-                gameEnd = false;
-                break;
-            }
-        }
-    }
-    if (gameEnd) {
-        return DRAW;
-    }
     return ONGOING;
 }
 
@@ -164,10 +151,10 @@ void Board::printBoard() {
                 cout << '_';
             }
             else if (board[i][j] == P1) {
-                cout << 'X';
+                cout << 'B';
             }
             else {
-                cout << '0';
+                cout << 'W';
             }
             cout << ' ';
         }
@@ -182,22 +169,84 @@ void Board::printStatus() {
         cout << "Game in progress";
     }
     else if (status == P1) {
-        cout << "X won";
+        cout << "Black won";
     }
     else if (status == P2) {
-        cout << "0 won";
-    }
-    else {
-        cout << "Draw";
+        cout << "White won";
     }
     cout << '\n';
 }
 
-vector<Position> Board::getValidMoves() {
+bool Board::chainHasLiberties(int player, Position pos, bool** visited){
+    cout<<"Inside chainHasLiberties: player=" << player << " position=(" << pos.x << "," << pos.y << ")\n";
+    if(pos.x < 0 || pos.y < 0 || pos.x >= this->boardSize || pos.y >= this->boardSize || visited[pos.x][pos.y]) {
+        cout<<"Return value in chainHasLiberties [player=" << player << " position=(" << pos.x << "," << pos.y << ")]: " << false << " (invalid or visited)\n";
+        return false;
+    }
+    visited[pos.x][pos.y] = true;
+    if(board[pos.x][pos.y] == Board::getOpponent(player)) {
+        cout<<"Return value in chainHasLiberties [player=" << player << " position=(" << pos.x << "," << pos.y << ")]: " << false << "(opponent)\n";
+        return false;
+    }
+    if(board[pos.x][pos.y] == EMPTY) {
+        cout<<"Return value in chainHasLiberties [player=" << player << " position=(" << pos.x << "," << pos.y << ")]: " << true << "(empty)\n";
+        return true;
+    }
+
+
+    bool ret = chainHasLiberties(player,Position(pos.x+1, pos.y), visited) ||
+            chainHasLiberties(player, Position(pos.x, pos.y + 1), visited) ||
+            chainHasLiberties(player, Position(pos.x-1, pos.y), visited) ||
+            chainHasLiberties(player, Position(pos.x, pos.y-1), visited);\
+    cout<<"Return value in chainHasLiberties [player=" << player << " position=(" << pos.x << "," << pos.y << ")]: " << ret << "\n";
+    return ret;
+}
+bool Board::isSuicideMove(int player, Position pos){
+    cout<<"Entered isSuicideMove: player=" << player << " position=(" << pos.x << "," << pos.y << ")\n";
+    bool** visited;
+    visited = new bool*[boardSize];
+    for (int i = 0; i < boardSize; ++i) {
+        visited[i] = new bool[boardSize]();
+    }
+
+    visited[pos.x][pos.y] = true;
+    int opponent = Board::getOpponent(player);
+
+    bool temp1 = !chainHasLiberties(player,Position(pos.x+1, pos.y), visited);
+    bool temp2 = !chainHasLiberties(player, Position(pos.x, pos.y + 1), visited);
+    bool temp3 = !chainHasLiberties(player, Position(pos.x-1, pos.y), visited);
+    bool temp4 = !chainHasLiberties(player, Position(pos.x, pos.y-1), visited);
+    bool isSuicide = temp1 && temp2 && temp3 && temp4;
+
+    /* bool isSuicide = !chainHasLiberties(player,Position(pos.x+1, pos.y), visited) &&
+            !chainHasLiberties(player, Position(pos.x, pos.y + 1), visited) &&
+            !chainHasLiberties(player, Position(pos.x-1, pos.y), visited) &&
+            !chainHasLiberties(player, Position(pos.x, pos.y-1), visited); */
+    cout<<"Inside isSuicideMove [player=" << player << " position=(" << pos.x << "," << pos.y << ")]: isSuicide=" << isSuicide << "\n";
+    for (int i = 0; i < boardSize; ++i){
+        for (int j = 0; j < boardSize; ++j) {
+            visited[i][j] = false;
+        }
+    }
+    visited[pos.x][pos.y] = true;
+    bool capture = (board[pos.x+1][pos.y] == opponent && !chainHasLiberties(opponent,Position(pos.x+1, pos.y), visited)) ||
+            (board[pos.x][pos.y+1] == opponent && !chainHasLiberties(opponent, Position(pos.x, pos.y+1), visited)) ||
+            (board[pos.x-1][pos.y] == opponent && !chainHasLiberties(opponent, Position(pos.x-1, pos.y), visited)) ||
+            (board[pos.x][pos.y-1] == opponent && !chainHasLiberties(opponent, Position(pos.x, pos.y-1), visited));
+    cout<<"Inside isSuicideMove [player=" << player << " position=(" << pos.x << "," << pos.y << ")]: isCapture=" << capture << "\n";
+    for (int i = 0; i < boardSize; ++i) {
+        delete[] visited[i];
+    }
+    delete[] visited;
+
+    return isSuicide && !capture;
+
+}
+vector<Position> Board::getValidMoves(int playerTurn) {
     vector<Position> moves;
     for (int i = 0; i < boardSize; ++i) {
         for (int j = 0; j < boardSize; ++j) {
-            if (board[i][j] == EMPTY) {
+            if (board[i][j] == EMPTY && !isSuicideMove(playerTurn, Position(i, j))) {
                 moves.push_back(Position(i, j));
             }
         }
@@ -207,6 +256,13 @@ vector<Position> Board::getValidMoves() {
 
 void Board::applyMove(int player, Position pos) {
     /* assume the move is valid */
+    if(prevBoard) {
+        for (int i = 0; i < prevBoard->boardSize; ++i) {
+            delete[] prevBoard->board[i];
+        }
+        delete[] prevBoard->board;
+    }
+    prevBoard = new Board(*this);
     board[pos.x][pos.y] = player;
 }
 

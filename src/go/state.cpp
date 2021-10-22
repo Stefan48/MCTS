@@ -61,7 +61,7 @@ void State::incrementVisits() {
 
 vector<State> State::getPossibleStates() {
     vector<State> possibleStates;
-    vector<Position> moves = board.getValidMoves();
+    vector<Position> moves = board.getValidMoves(this->playerTurn);
     for (auto it = moves.begin(); it != moves.end(); ++it) {
         State newState(this->board, this->getOpponent());
         newState.board.applyMove(this->playerTurn, *it);
@@ -71,7 +71,7 @@ vector<State> State::getPossibleStates() {
 }
 
 void State::applyRandomMove() {
-    vector<Position> moves = board.getValidMoves();
+    vector<Position> moves = board.getValidMoves(this->playerTurn);
     int chosen = rand() % moves.size();
     board.applyMove(this->playerTurn, moves[chosen]);
     this->togglePlayerTurn();
