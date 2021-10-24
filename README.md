@@ -1,1 +1,1 @@
-# MCTS-TicTacToe
+# MCTS
