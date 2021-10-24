@@ -69,6 +69,20 @@ Board& Board::operator=(const Board &other)
     return *this;
 }
 
+bool operator== (const Board &b1, const Board &b2)
+{
+    if(b1.boardSize != b2.boardSize) {
+        return false;
+    }
+    for(int i = 0; i < b1.boardSize; i++){
+        for(int j = 0; j < b1.boardSize; j++){
+            if(b1.board[i][j] != b2.board[i][j]) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 int** Board::getBoard() {
     return board;
 }
@@ -242,18 +256,37 @@ bool Board::isSuicideMove(int player, Position pos){
     return isSuicide && !capture;
 
 }
+
+ bool Board::isKoMove(int playerTurn, Position pos){
+     Board copyBoard = Board(*this);
+     copyBoard.applyMove(playerTurn, pos);
+     if(copyBoard == *prevBoard) {
+        return true;
+     }
+
+    return false;
+ }
 vector<Position> Board::getValidMoves(int playerTurn) {
     vector<Position> moves;
     for (int i = 0; i < boardSize; ++i) {
         for (int j = 0; j < boardSize; ++j) {
-            if (board[i][j] == EMPTY && !isSuicideMove(playerTurn, Position(i, j))) {
+            if (board[i][j] == EMPTY && !isSuicideMove(playerTurn, Position(i, j))&& !isKoMove(playerTurn, Position(i, j))) {
                 moves.push_back(Position(i, j));
             }
         }
     }
     return moves;
 }
+void Board::capturePieces(int playerCaptured, Position pos, bool** visited){
+    for (int i = 0; i < boardSize; ++i){
+        for (int j = 0; j < boardSize; ++j) {
+            if(board[i][j] == playerCaptured && visited[i][j]){
+                board[i][j] = EMPTY;
+            }
+        }
+    }
 
+}
 void Board::applyMove(int player, Position pos) {
     /* assume the move is valid */
     if(prevBoard) {
@@ -264,6 +297,49 @@ void Board::applyMove(int player, Position pos) {
     }
     prevBoard = new Board(*this);
     board[pos.x][pos.y] = player;
+
+    bool** visited;
+    visited = new bool*[boardSize];
+    for (int i = 0; i < boardSize; ++i) {
+        visited[i] = new bool[boardSize]();
+    }
+
+    visited[pos.x][pos.y] = true;
+    int opponent = Board::getOpponent(player);
+    bool captured = false;
+    if(pos.x + 1 < this->boardSize && board[pos.x+1][pos.y] == opponent){
+        captured = !chainHasLiberties(opponent, Position(pos.x+1, pos.y), visited);
+    }
+    if(captured){
+        capturePieces(opponent, Position(pos.x+1, pos.y), visited);
+    }
+    for (int i = 0; i < boardSize; ++i){
+       memset(visited[i], 0, boardSize*sizeof(bool));
+    }
+    if(pos.y + 1 < this->boardSize && board[pos.x][pos.y + 1] == opponent){
+        captured = !chainHasLiberties(opponent, Position(pos.x, pos.y + 1), visited);
+    }
+    if(captured){
+        capturePieces(opponent, Position(pos.x, pos.y + 1), visited);
+    }
+    for (int i = 0; i < boardSize; ++i){
+        memset(visited[i], 0, boardSize*sizeof(bool));
+    }
+    if(pos.x - 1 >= 0 && board[pos.x - 1][pos.y] == opponent){
+        captured = !chainHasLiberties(opponent, Position(pos.x -1, pos.y), visited);
+    }
+    if(captured){
+       capturePieces(opponent, Position(pos.x-1, pos.y), visited);
+    }
+    for (int i = 0; i < boardSize; ++i){
+        memset(visited[i], 0, boardSize*sizeof(bool));
+    }
+    if(pos.y - 1 >= 0 && board[pos.x][pos.y - 1] == opponent){
+        captured = !chainHasLiberties(opponent, Position(pos.x, pos.y - 1), visited);
+    }
+    if(captured){
+        capturePieces(opponent, Position(pos.x, pos.y-1), visited);
+    }
 }
 
 

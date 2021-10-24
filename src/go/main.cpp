@@ -77,8 +77,9 @@ int main()
     v[3][0] = 0; v[3][1] = 0; v[3][2] = 0; v[3][3] = 0; v[3][4] = 0;
     v[4][0] = 0; v[4][1] = 0; v[4][2] = 0; v[4][3] = 0; v[4][4] = 0;
     Board board(5, v);
-    cout << (board.isSuicideMove(2, Position(1,1)) ? "is suicide\n" : "isn't suicide\n");
-
-
+    //cout << (board.isSuicideMove(2, Position(1,1)) ? "is suicide\n" : "isn't suicide\n");
+    board.applyMove(2, Position(1,1));
+    board.printBoard();
+    cout<<board.isKoMove(1,Position(1,2));
     return 0;
 }

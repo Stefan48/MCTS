@@ -25,6 +25,7 @@ public:
     Board(const Board &other);
     ~Board();
     Board& operator=(const Board &other);
+    friend bool operator==(const Board &b1, const Board &b2);
 
     int **getBoard();
     void setBoard(int **board);
@@ -35,8 +36,9 @@ public:
     vector<Position> getValidMoves(int player);
     void applyMove(int player, Position pos);
     bool isSuicideMove(int player, Position pos);
-    bool isKoMove(Board board, Position pos);
+    bool isKoMove(int playerTurn, Position pos);
     bool chainHasLiberties(int player, Position pos, bool** visited);
+    void capturePieces(int opponent, Position pos,bool** visited);
 };
 
 #endif // __BOARD_H__
