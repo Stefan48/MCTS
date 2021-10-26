@@ -7,7 +7,6 @@ class State {
     Board board;
     int playerTurn = Board::P1;
     int wins = 0;
-    int draws = 0;
     int visits = 0;
 
 public:
@@ -23,8 +22,6 @@ public:
     void togglePlayerTurn();
     int getWins();
     void incrementWins();
-    int getDraws();
-    void incrementDraws();
     int getVisits();
     void incrementVisits();
     vector<State> getPossibleStates();

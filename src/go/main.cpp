@@ -8,8 +8,8 @@ using namespace std;
 
 int main()
 {
-    /* srand(time(NULL));
-    Board board;
+    srand(time(NULL));
+    Board board(9);
     int playerTurn = Board::P1;
     board.printBoard();
     cout << '\n';
@@ -22,18 +22,15 @@ int main()
             break;
         }
     }
-    board.printStatus(); */
+    board.printStatus();
 
-    srand(time(NULL));
+    /* srand(time(NULL));
     int draws = 0, winsP1 = 0, winsP2 = 0;
-    for (int i = 0; i < 1; ++i) {
+    for (int i = 0; i < 10; ++i) {
         Board board(13);
         int playerTurn = Board::P1;
         while (board.getStatus() == Board::ONGOING) {
-            board.printBoard();
-            cout << "\n";
             board = MCTS::getNextMove(board, playerTurn);
-            cout << "!\n";
             playerTurn = Board::getOpponent(playerTurn);
         }
         int status = board.getStatus();
@@ -44,7 +41,7 @@ int main()
             winsP2++;
         }
     }
-    cout << "draws: " << draws << "\nwins X: " << winsP1 << "\nwins 0: " << winsP2 << "\n";
+    cout << "draws: " << draws << "\nwins X: " << winsP1 << "\nwins 0: " << winsP2 << "\n"; */
 
     /* srand(time(NULL));
     int **v = new int*[3];

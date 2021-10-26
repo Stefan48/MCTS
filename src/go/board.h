@@ -11,6 +11,11 @@ class Board {
     Board *prevBoard = NULL;
     int passes = 0;
 
+    bool chainHasLiberties(int player, Position pos, bool **visited);
+    bool isSuicideMove(int player, Position pos);
+    bool isKoMove(int playerTurn, Position pos);
+    void capturePieces(int playerCaptured, Position pos, bool **visited);
+
 public:
     const static int ONGOING = 0;
     const static int P1 = 1;
@@ -36,10 +41,6 @@ public:
     void printStatus();
     vector<Position> getValidMoves(int player);
     void applyMove(int player, Position pos);
-    bool isSuicideMove(int player, Position pos);
-    bool isKoMove(int playerTurn, Position pos);
-    bool chainHasLiberties(int player, Position pos, bool** visited);
-    void capturePieces(int opponent, Position pos,bool** visited);
 };
 
 #endif // __BOARD_H__

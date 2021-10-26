@@ -27,7 +27,6 @@ public:
     Node *getRandomChildNode();
     Node *getChildWithMaxVisits();
     void incrementWins();
-    void incrementDraws();
     void incrementVisits();
     double getUctValue();
     Node *getMaxUctChild();

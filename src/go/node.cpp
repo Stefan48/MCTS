@@ -68,10 +68,6 @@ void Node::incrementWins() {
     this->state.incrementWins();
 }
 
-void Node::incrementDraws() {
-    this->state.incrementDraws();
-}
-
 void Node::incrementVisits() {
     this->state.incrementVisits();
 }
@@ -79,7 +75,6 @@ void Node::incrementVisits() {
 double Node::getUctValue() {
     int perspective = this->getState().getOpponent();
     int wins = this->getState().getWins();
-    int draws = this->getState().getDraws();
     int nodeVisits = this->getState().getVisits();
     int parentVisits = this->parent->getState().getVisits();
 
@@ -87,10 +82,10 @@ double Node::getUctValue() {
         return std::numeric_limits<double>::max();
     }
     if (perspective == Board::P1) {
-        return (wins + (double)draws/10.0) / (double)nodeVisits + sqrt(2*log(parentVisits) / (double)nodeVisits);
+        return wins / (double)nodeVisits + sqrt(2*log(parentVisits) / (double)nodeVisits);
     }
     /* complement the exploitation factor (and keep the exploration factor) */
-    return 1 - (wins + (double)draws/10.0) / (double)nodeVisits + sqrt(2*log(parentVisits) / (double)nodeVisits);
+    return 1 - wins / (double)nodeVisits + sqrt(2*log(parentVisits) / (double)nodeVisits);
 }
 
 Node* Node::getMaxUctChild() {

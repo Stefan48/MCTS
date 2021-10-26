@@ -43,14 +43,6 @@ void State::incrementWins() {
     this->wins++;
 }
 
-int State::getDraws() {
-    return draws;
-}
-
-void State::incrementDraws() {
-    this->draws++;
-}
-
 int State::getVisits() {
     return visits;
 }
@@ -71,11 +63,8 @@ vector<State> State::getPossibleStates() {
 }
 
 void State::applyRandomMove() {
-    // cout << "Entered applyRandomMove: " << board.getStatus() << "\n";
     vector<Position> moves = board.getValidMoves(this->playerTurn);
-    //cout<<"yeyy"<<" "<<moves.size()<<endl;
     int chosen = rand() % moves.size();
     board.applyMove(this->playerTurn, moves[chosen]);
-    //cout<<"nooooo"<<endl;
     this->togglePlayerTurn();
 }
