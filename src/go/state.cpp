@@ -71,8 +71,11 @@ vector<State> State::getPossibleStates() {
 }
 
 void State::applyRandomMove() {
+    // cout << "Entered applyRandomMove: " << board.getStatus() << "\n";
     vector<Position> moves = board.getValidMoves(this->playerTurn);
+    //cout<<"yeyy"<<" "<<moves.size()<<endl;
     int chosen = rand() % moves.size();
     board.applyMove(this->playerTurn, moves[chosen]);
+    //cout<<"nooooo"<<endl;
     this->togglePlayerTurn();
 }

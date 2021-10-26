@@ -9,6 +9,7 @@ class Board {
     int boardSize;
     int **board = NULL;
     Board *prevBoard = NULL;
+    int passes = 0;
 
 public:
     const static int ONGOING = 0;

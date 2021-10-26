@@ -24,13 +24,16 @@ int main()
     }
     board.printStatus(); */
 
-    /*srand(time(NULL));
+    srand(time(NULL));
     int draws = 0, winsP1 = 0, winsP2 = 0;
     for (int i = 0; i < 1; ++i) {
-        Board board;
+        Board board(13);
         int playerTurn = Board::P1;
         while (board.getStatus() == Board::ONGOING) {
+            board.printBoard();
+            cout << "\n";
             board = MCTS::getNextMove(board, playerTurn);
+            cout << "!\n";
             playerTurn = Board::getOpponent(playerTurn);
         }
         int status = board.getStatus();
@@ -42,7 +45,7 @@ int main()
         }
     }
     cout << "draws: " << draws << "\nwins X: " << winsP1 << "\nwins 0: " << winsP2 << "\n";
-    */
+
     /* srand(time(NULL));
     int **v = new int*[3];
     for (int i = 0; i < 3; ++i) {
@@ -67,7 +70,8 @@ int main()
     //    cout << "----------\n";
     // }
     MCTS::getNextMove(board, 2).printBoard(); */
-    int **v = new int*[5];
+
+    /* int **v = new int*[5];
     for (int i = 0; i < 5; ++i) {
         v[i] = new int[5]();
     }
@@ -78,8 +82,13 @@ int main()
     v[4][0] = 0; v[4][1] = 0; v[4][2] = 0; v[4][3] = 0; v[4][4] = 0;
     Board board(5, v);
     //cout << (board.isSuicideMove(2, Position(1,1)) ? "is suicide\n" : "isn't suicide\n");
-    board.applyMove(2, Position(1,1));
-    board.printBoard();
-    cout<<board.isKoMove(1,Position(1,2));
+    //ard.applyMove(2, Position(1,1));
+    //board.printBoard();
+    //cout<<board.isKoMove(1,Position(1,2));
+    vector<Position> moves = board.getValidMoves(2);
+    for (auto it = moves.begin(); it != moves.end(); ++it) {
+        cout << it->x << " " << it->y << "\n";
+    }
+    cout << "\n"; */
     return 0;
 }
