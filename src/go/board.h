@@ -6,17 +6,24 @@
 using namespace std;
 
 class Board {
+    public:
     int boardSize;
     int **board = NULL;
-    Board *prevBoard = NULL;
+    int playerTurn = P1;
+    int **prevBoard = NULL;
     int passes = 0;
 
+    static bool equalBoards(int **b1, int **b2, int boardSize);
+    void togglePlayerTurn();
+    void updatePlayersFound(int &playersFound, int players);
+    int countTerritory(Position pos, bool **visited, int &cnt);
     bool chainHasLiberties(int player, Position pos, bool **visited);
-    bool isSuicideMove(int player, Position pos);
-    bool isKoMove(int playerTurn, Position pos);
+    bool isSuicideMove(Position pos);
+    bool isKoMove(Position pos);
     void capturePieces(int playerCaptured, Position pos, bool **visited);
 
 public:
+    constexpr static float KOMI = 6.5f;
     const static int ONGOING = 0;
     const static int P1 = 1;
     const static int P2 = 2;
@@ -28,6 +35,7 @@ public:
     Board();
     Board(int boardSize);
     Board(int boardSize, int **board);
+    Board(int boardSize, int **board, int playerTurn);
     Board(const Board &other);
     ~Board();
     Board& operator=(const Board &other);
@@ -36,11 +44,15 @@ public:
     int **getBoard();
     void setBoard(int **board);
     int getBoardSize();
-    int getStatus();
+    int getPlayerTurn();
+    int getCurrentOpponent();
+    bool isOngoing();
+    int getStatus(float *blackScore, float *whiteScore);
     void printBoard();
     void printStatus();
-    vector<Position> getValidMoves(int player);
-    void applyMove(int player, Position pos);
+    vector<Position> getValidMoves();
+    void applyMove(Position pos);
+    void applyRandomMove();
 };
 
 #endif // __BOARD_H__

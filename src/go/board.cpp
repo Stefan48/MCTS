@@ -31,6 +31,18 @@ Board::Board(int boardSize, int **board) {
     }
 }
 
+Board::Board(int boardSize, int **board, int playerTurn) {
+    this->boardSize = boardSize;
+    this->board = new int*[boardSize];
+    for (int i = 0; i < boardSize; ++i) {
+        this->board[i] = new int[boardSize];
+        for (int j = 0; j < boardSize; ++j) {
+            this->board[i][j] = board[i][j];
+        }
+    }
+    this->playerTurn = playerTurn;
+}
+
 Board::Board(const Board &other) {
     this->boardSize = other.boardSize;
     this->board = new int*[this->boardSize];
@@ -40,6 +52,19 @@ Board::Board(const Board &other) {
             this->board[i][j] = other.board[i][j];
         }
     }
+    this->playerTurn = other.playerTurn;
+    if (other.prevBoard) {
+        this->prevBoard = new int*[this->boardSize];
+        for (int i = 0; i < this->boardSize; ++i) {
+            this->prevBoard[i] = new int[this->boardSize];
+            for (int j = 0; j < this->boardSize; ++j) {
+                this->prevBoard[i][j] = other.prevBoard[i][j];
+            }
+        }
+    }
+    else {
+        this->prevBoard = NULL;
+    }
     this->passes = other.passes;
 }
 
@@ -48,6 +73,12 @@ Board::~Board() {
         delete[] board[i];
     }
     delete[] board;
+    if (prevBoard) {
+        for (int i = 0; i < boardSize; ++i) {
+            delete[] prevBoard[i];
+        }
+        delete[] prevBoard;
+    }
 }
 
 Board& Board::operator=(const Board &other)
@@ -66,24 +97,47 @@ Board& Board::operator=(const Board &other)
                 this->board[i][j] = other.board[i][j];
             }
         }
+        this->playerTurn = other.playerTurn;
+        if (this->prevBoard) {
+            for (int i = 0; i < this->boardSize; ++i) {
+                delete[] this->prevBoard[i];
+            }
+            delete[] this->prevBoard;
+        }
+        if (other.prevBoard) {
+            this->prevBoard = new int*[this->boardSize];
+            for (int i = 0; i < this->boardSize; ++i) {
+                this->prevBoard[i] = new int[this->boardSize];
+                for (int j = 0; j < this->boardSize; ++j) {
+                    this->prevBoard[i][j] = other.prevBoard[i][j];
+                }
+            }
+        }
+        else {
+            this->prevBoard = NULL;
+        }
         this->passes = other.passes;
     }
     return *this;
 }
 
-bool operator==(const Board &b1, const Board &b2)
-{
-    if(b1.boardSize != b2.boardSize) {
-        return false;
-    }
-    for(int i = 0; i < b1.boardSize; ++i) {
-        for(int j = 0; j < b1.boardSize; ++j) {
-            if(b1.board[i][j] != b2.board[i][j]) {
+bool Board::equalBoards(int **b1, int **b2, int boardSize) {
+    for (int i = 0; i < boardSize; ++i) {
+        for (int j = 0; j < boardSize; ++j) {
+            if (b1[i][j] != b2[i][j]) {
                 return false;
             }
         }
     }
     return true;
+}
+
+bool operator==(const Board &b1, const Board &b2)
+{
+    if (b1.boardSize != b2.boardSize) {
+        return false;
+    }
+    return Board::equalBoards(b1.board, b2.board, b1.boardSize);
 }
 int** Board::getBoard() {
     return board;
@@ -101,12 +155,117 @@ int Board::getBoardSize() {
     return boardSize;
 }
 
-int Board::getStatus() {
+
+int Board::getPlayerTurn() {
+    return playerTurn;
+}
+
+void Board::togglePlayerTurn() {
+    playerTurn = getCurrentOpponent();
+}
+
+int Board::getCurrentOpponent() {
+    return Board::getOpponent(playerTurn);
+}
+
+bool Board::isOngoing() {
+    return (passes < 2);
+}
+
+void Board::updatePlayersFound(int &currentPlayersFound, int newPlayersFound) {
+    if (currentPlayersFound == P1 + P2) {
+        return;
+    }
+    if (newPlayersFound == P1 + P2) {
+        currentPlayersFound = newPlayersFound;
+        return;
+    }
+    if (currentPlayersFound == P1) {
+        if (newPlayersFound == P2) {
+            currentPlayersFound = P1 + P2;
+        }
+    }
+    else if (currentPlayersFound == P2) {
+        if (newPlayersFound == P1) {
+            currentPlayersFound = P1 + P2;
+        }
+    }
+    else {
+        currentPlayersFound = newPlayersFound;
+    }
+}
+
+int Board::countTerritory(Position pos, bool **visited, int &cnt) {
+    if (visited[pos.x][pos.y]) {
+        return board[pos.x][pos.y];
+    }
+    visited[pos.x][pos.y] = true;
+    if (board[pos.x][pos.y] == EMPTY) {
+        cnt++;
+        int playersFound = 0;
+        if (pos.x+1 < boardSize) {
+            updatePlayersFound(playersFound, countTerritory(Position(pos.x+1, pos.y), visited, cnt));
+        }
+        if (pos.y+1 < boardSize) {
+            updatePlayersFound(playersFound, countTerritory(Position(pos.x, pos.y+1), visited, cnt));
+        }
+        if (pos.x-1 >= 0) {
+            updatePlayersFound(playersFound, countTerritory(Position(pos.x-1, pos.y), visited, cnt));
+        }
+        if (pos.y-1 >= 0) {
+            updatePlayersFound(playersFound, countTerritory(Position(pos.x, pos.y-1), visited, cnt));
+        }
+        return playersFound;
+    }
+    else if (board[pos.x][pos.y] == P1) {
+        return P1;
+    }
+    else {
+        return P2;
+    }
+}
+
+int Board::getStatus(float *blackScore, float *whiteScore) {
     if (passes < 2) {
         return ONGOING;
     }
-    // TODO
-    return rand() % 2 + 1;
+    float black = 0, white = KOMI;
+    int playersFound, cnt;
+    bool **visited = new bool*[boardSize];
+    for (int i = 0; i < boardSize; ++i) {
+        visited[i] = new bool[boardSize]();
+    }
+    for (int i = 0; i < boardSize; ++i) {
+        for (int j = 0; j < boardSize; ++j) {
+            if (board[i][j] == P1) {
+                black++;
+            }
+            else if (board[i][j] == P2) {
+                white++;
+            }
+            else if (!visited[i][j]) {
+                cnt = 0;
+                playersFound = countTerritory(Position(i, j), visited, cnt);
+                if (playersFound == P1) {
+                    black += cnt;
+                }
+                else if (playersFound == P2) {
+                    white += cnt;
+                }
+            }
+        }
+    }
+    for (int i = 0; i < boardSize; ++i) {
+        delete[] visited[i];
+    }
+    delete[] visited;
+    if (blackScore) {
+        *blackScore = black;
+    }
+    if (whiteScore) {
+        *whiteScore = white;
+    }
+    return black > white ? P1 : P2;
 }
 
 void Board::printBoard() {
@@ -129,90 +288,101 @@ void Board::printBoard() {
 }
 
 void Board::printStatus() {
-    int status = getStatus();
+    float blackScore, whiteScore;
+    int status = getStatus(&blackScore, &whiteScore);
     if (status == ONGOING) {
         cout << "Game in progress";
     }
     else if (status == P1) {
-        cout << "Black won";
+        cout << "Black won (" << blackScore << " - " << whiteScore << ')';
     }
     else if (status == P2) {
-        cout << "White won";
+        cout << "White won (" << blackScore << " - " << whiteScore << ')';
     }
     cout << '\n';
 }
 
 bool Board::chainHasLiberties(int player, Position pos, bool **visited) {
-    //cout<<"Inside chainHasLiberties: player=" << player << " position=(" << pos.x << "," << pos.y << ")\n";
-    if(pos.x < 0 || pos.y < 0 || pos.x >= boardSize || pos.y >= boardSize || visited[pos.x][pos.y]) {
-        //cout<<"Return value in chainHasLiberties [player=" << player << " position=(" << pos.x << "," << pos.y << ")]: " << false << " (invalid or visited)\n";
+    /* assume the position is valid */
+    if (board[pos.x][pos.y] == Board::getOpponent(player)) {
         return false;
     }
-    visited[pos.x][pos.y] = true;
-    if(board[pos.x][pos.y] == Board::getOpponent(player)) {
-        //cout<<"Return value in chainHasLiberties [player=" << player << " position=(" << pos.x << "," << pos.y << ")]: " << false << "(opponent)\n";
-        return false;
-    }
-    if(board[pos.x][pos.y] == EMPTY) {
-        //cout<<"Return value in chainHasLiberties [player=" << player << " position=(" << pos.x << "," << pos.y << ")]: " << true << "(empty)\n";
+    if (board[pos.x][pos.y] == EMPTY) {
         return true;
     }
-
-
-    bool ret = chainHasLiberties(player,Position(pos.x+1, pos.y), visited) ||
-            chainHasLiberties(player, Position(pos.x, pos.y+1), visited) ||
-            chainHasLiberties(player, Position(pos.x-1, pos.y), visited) ||
-            chainHasLiberties(player, Position(pos.x, pos.y-1), visited);
-    //out<<"Return value in chainHasLiberties [player=" << player << " position=(" << pos.x << "," << pos.y << ")]: " << ret << "\n";
-    return ret;
+    visited[pos.x][pos.y] = true;
+    bool hasLiberties = false;
+    if (pos.x+1 < boardSize && !visited[pos.x+1][pos.y]) {
+        hasLiberties = chainHasLiberties(player,Position(pos.x+1, pos.y), visited);
+    }
+    if (pos.y+1 < boardSize && !visited[pos.x][pos.y+1]) {
+        hasLiberties = chainHasLiberties(player, Position(pos.x, pos.y+1), visited) || hasLiberties;
+    }
+    if (pos.x-1 >= 0 && !visited[pos.x-1][pos.y]) {
+        hasLiberties = chainHasLiberties(player, Position(pos.x-1, pos.y), visited) || hasLiberties;
+    }
+    if (pos.y-1 >= 0 && !visited[pos.x][pos.y-1]) {
+        hasLiberties = chainHasLiberties(player, Position(pos.x, pos.y-1), visited) || hasLiberties;
+    }
+    return hasLiberties;
 }
-bool Board::isSuicideMove(int player, Position pos) {
-    //cout<<"Entered isSuicideMove: player=" << player << " position=(" << pos.x << "," << pos.y << ")\n";
+
+bool Board::isSuicideMove(Position pos) {
+    int player = this->playerTurn;
     bool **visited;
     visited = new bool*[boardSize];
     for (int i = 0; i < boardSize; ++i) {
         visited[i] = new bool[boardSize]();
     }
     visited[pos.x][pos.y] = true;
-    int opponent = Board::getOpponent(player);
-
-    /* bool temp1 = !chainHasLiberties(player,Position(pos.x+1, pos.y), visited);
-    bool temp2 = !chainHasLiberties(player, Position(pos.x, pos.y+1), visited);
-    bool temp3 = !chainHasLiberties(player, Position(pos.x-1, pos.y), visited);
-    bool temp4 = !chainHasLiberties(player, Position(pos.x, pos.y-1), visited);
-    bool isSuicide = temp1 && temp2 && temp3 && temp4; */
-
-    bool isSuicide = !chainHasLiberties(player, Position(pos.x+1, pos.y), visited) &&
-            !chainHasLiberties(player, Position(pos.x, pos.y+1), visited) &&
-            !chainHasLiberties(player, Position(pos.x-1, pos.y), visited) &&
-            !chainHasLiberties(player, Position(pos.x, pos.y-1), visited);
-    // cout<<"Inside isSuicideMove [player=" << player << " position=(" << pos.x << "," << pos.y << ")]: isSuicide=" << isSuicide << "\n";
+    bool isSuicide = true;
+    if (pos.x+1 < boardSize) {
+        isSuicide = !chainHasLiberties(player, Position(pos.x+1, pos.y), visited);
+    }
+    if (pos.y+1 < boardSize && !visited[pos.x][pos.y+1]) {
+        isSuicide = isSuicide && !chainHasLiberties(player, Position(pos.x, pos.y+1), visited);
+    }
+    if (pos.x-1 >= 0 && !visited[pos.x-1][pos.y]) {
+        isSuicide = isSuicide && !chainHasLiberties(player, Position(pos.x-1, pos.y), visited);
+    }
+    if (pos.y-1 >= 0 && !visited[pos.x][pos.y-1]) {
+        isSuicide = isSuicide && !chainHasLiberties(player, Position(pos.x, pos.y-1), visited);
+    }
     for (int i = 0; i < boardSize; ++i){
-        for (int j = 0; j < boardSize; ++j) {
-            visited[i][j] = false;
-        }
+        memset(visited[i], 0, boardSize * sizeof(bool));
     }
     visited[pos.x][pos.y] = true;
-    bool isCapture = ((pos.x+1 < boardSize) && board[pos.x+1][pos.y] == opponent && !chainHasLiberties(opponent, Position(pos.x+1, pos.y), visited)) ||
-            ((pos.y+1 < boardSize) && board[pos.x][pos.y+1] == opponent && !chainHasLiberties(opponent, Position(pos.x, pos.y+1), visited)) ||
-            ((pos.x-1 >= 0) && board[pos.x-1][pos.y] == opponent && !chainHasLiberties(opponent, Position(pos.x-1, pos.y), visited)) ||
-            ((pos.y-1 >= 0) && board[pos.x][pos.y-1] == opponent && !chainHasLiberties(opponent, Position(pos.x, pos.y-1), visited));
-    // cout<<"Inside isSuicideMove [player=" << player << " position=(" << pos.x << "," << pos.y << ")]: isCapture=" << capture << "\n";
+    int opponent = this->getCurrentOpponent();
+    bool isCapture = false;
+    if (pos.x+1 < boardSize && board[pos.x+1][pos.y] == opponent) {
+        isCapture = !chainHasLiberties(opponent, Position(pos.x+1, pos.y), visited);
+    }
+    if (pos.y+1 < boardSize && board[pos.x][pos.y+1] == opponent && !visited[pos.x][pos.y+1]) {
+        isCapture = isCapture || !chainHasLiberties(opponent, Position(pos.x, pos.y+1), visited);
+    }
+    if (pos.x-1 >= 0 && board[pos.x-1][pos.y] == opponent && !visited[pos.x-1][pos.y]) {
+        isCapture = isCapture || !chainHasLiberties(opponent, Position(pos.x-1, pos.y), visited);
+    }
+    if (pos.y-1 >= 0 && board[pos.x][pos.y-1] == opponent && !visited[pos.x][pos.y-1]) {
+        isCapture = isCapture || !chainHasLiberties(opponent, Position(pos.x, pos.y-1), visited);
+    }
     for (int i = 0; i < boardSize; ++i) {
         delete[] visited[i];
     }
     delete[] visited;
-
     return isSuicide && !isCapture;
 }
 
-bool Board::isKoMove(int playerTurn, Position pos) {
-    Board copyBoard = Board(*this);
-    copyBoard.applyMove(playerTurn, pos);
-    return (prevBoard && copyBoard == *prevBoard);
+bool Board::isKoMove(Position pos) {
+    if (this->prevBoard == NULL) {
+        return false;
+    }
+    Board tempBoard = Board(*this);
+    tempBoard.applyMove(pos);
+    return equalBoards(tempBoard.board, this->prevBoard, this->boardSize);
 }
 
-vector<Position> Board::getValidMoves(int playerTurn) {
+vector<Position> Board::getValidMoves() {
     vector<Position> moves;
     if (this->passes >= 2) {
         return moves;
@@ -220,7 +390,7 @@ vector<Position> Board::getValidMoves(int playerTurn) {
     moves.push_back(Position(-1, -1));
     for (int i = 0; i < boardSize; ++i) {
         for (int j = 0; j < boardSize; ++j) {
-            if (board[i][j] == EMPTY && !isSuicideMove(playerTurn, Position(i, j)) && !isKoMove(playerTurn, Position(i, j))) {
+            if (board[i][j] == EMPTY && !isSuicideMove(Position(i, j)) && !isKoMove(Position(i, j))) {
                 moves.push_back(Position(i, j));
             }
         }
@@ -231,40 +401,46 @@ vector<Position> Board::getValidMoves(int playerTurn) {
 void Board::capturePieces(int playerCaptured, Position pos, bool **visited) {
     for (int i = 0; i < boardSize; ++i) {
         for (int j = 0; j < boardSize; ++j) {
-            if(board[i][j] == playerCaptured && visited[i][j]){
+            if (board[i][j] == playerCaptured && visited[i][j]){
                 board[i][j] = EMPTY;
             }
         }
     }
 }
 
-void Board::applyMove(int player, Position pos) {
+void Board::applyMove(Position pos) {
     /* assume the move is valid */
-    if(prevBoard) {
+    if (prevBoard) {
         for (int i = 0; i < boardSize; ++i) {
             for (int j = 0; j < boardSize; ++j) {
-                prevBoard->board[i][j] = board[i][j];
+                prevBoard[i][j] = board[i][j];
             }
         }
     }
     else {
-        prevBoard = new Board(*this);
+        prevBoard = new int*[boardSize];
+        for (int i = 0; i < boardSize; ++i) {
+            prevBoard[i] = new int[boardSize];
+            for (int j = 0; j < boardSize; ++j) {
+                prevBoard[i][j] = board[i][j];
+            }
+        }
     }
 
     if (pos.x == -1 && pos.y == -1) {
         this->passes++;
+        this->togglePlayerTurn();
         return;
     }
-
-    board[pos.x][pos.y] = player;
+    this->passes = 0;
+    board[pos.x][pos.y] = this->playerTurn;
     bool **visited;
     visited = new bool*[boardSize];
     for (int i = 0; i < boardSize; ++i) {
         visited[i] = new bool[boardSize]();
     }
     visited[pos.x][pos.y] = true;
-    int opponent = Board::getOpponent(player);
-
+    int opponent = this->getCurrentOpponent();
     if (pos.x+1 < boardSize && board[pos.x+1][pos.y] == opponent) {
         if (!chainHasLiberties(opponent, Position(pos.x+1, pos.y), visited)) {
             capturePieces(opponent, Position(pos.x+1, pos.y), visited);
@@ -274,7 +450,6 @@ void Board::applyMove(int player, Position pos) {
         }
         visited[pos.x][pos.y] = true;
     }
-
     if (pos.y+1 < boardSize && board[pos.x][pos.y+1] == opponent) {
         if (!chainHasLiberties(opponent, Position(pos.x, pos.y+1), visited)) {
             capturePieces(opponent, Position(pos.x, pos.y+1), visited);
@@ -302,4 +477,12 @@ void Board::applyMove(int player, Position pos) {
         delete[] visited[i];
     }
     delete[] visited;
+    this->togglePlayerTurn();
+}
+
+void Board::applyRandomMove() {
+    vector<Position> moves = getValidMoves();
+    int chosen = rand() % moves.size();
+    applyMove(moves[chosen]);
+    this->togglePlayerTurn();
 }

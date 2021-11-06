@@ -2,12 +2,17 @@
 
 Node::Node() {}
 
-Node::Node(State state) {
-    this->state = state;
+Node::Node(Board *board) {
+    this->board = board;
 }
 
-Node::Node(State state, Node *parent, vector<Node*> children) {
-    this->state = state;
+Node::Node(Position lastMove, Node *parent) {
+    this->lastMove = lastMove;
+    this->parent = parent;
+}
+
+Node::Node(Board *board, Node *parent, vector<Node*> children) {
+    this->board = board;
     this->parent = parent;
     this->children = children;
 }
@@ -16,15 +21,22 @@ void Node::freeNode(Node *node) {
     for (auto it = node->children.begin(); it != node->children.end(); ++it) {
         freeNode(*it);
     }
+    if(node->board) {
+        delete node->board;
+    }
     delete node;
 }
 
-State Node::getState() {
-    return state;
+Position Node::getLastMove() {
+    return lastMove;
 }
 
-void Node::setState(State state) {
-    this->state = state;
+Board* Node::getBoard() {
+    return board;
+}
+
+void Node::setBoard(Board *board) {
+    this->board = board;
 }
 
 Node* Node::getParent() {
@@ -43,6 +55,17 @@ void Node::setChildren(vector<Node*> children) {
     this->children = children;
 }
 
+vector<Node*> Node::getPossibleSuccessors() {
+    /* assume the node has a board */
+    vector<Node*> possibleSuccessors;
+    vector<Position> moves = board->getValidMoves();
+    for (auto it = moves.begin(); it != moves.end(); ++it) {
+        Node *newNode = new Node(*it, this);
+        possibleSuccessors.push_back(newNode);
+    }
+    return possibleSuccessors;
+}
+
 void Node::addChild(Node *node) {
     children.push_back(node);
 }
@@ -55,8 +78,9 @@ Node* Node::getChildWithMaxVisits() {
     Node *child;
     int maxVisits = INT_MIN, visits;
     for (int i = 0; i < (int)children.size(); ++i) {
-        visits = children[i]->getState().getVisits();
-        if (visits > maxVisits) {
+        visits = children[i]->visits;
+        /* greater or equal in order to avoid passes */
+        if (visits >= maxVisits) {
             maxVisits = visits;
             child = children[i];
         }
@@ -65,27 +89,25 @@ Node* Node::getChildWithMaxVisits() {
 }
 
 void Node::incrementWins() {
-    this->state.incrementWins();
+    this->wins++;
 }
 
 void Node::incrementVisits() {
-    this->state.incrementVisits();
+    this->visits++;
 }
 
 double Node::getUctValue() {
-    int perspective = this->getState().getOpponent();
-    int wins = this->getState().getWins();
-    int nodeVisits = this->getState().getVisits();
-    int parentVisits = this->parent->getState().getVisits();
+    int perspective = this->parent->getBoard()->getPlayerTurn();
+    int parentVisits = this->parent->visits;
 
-    if (nodeVisits == 0) {
+    if (visits == 0) {
         return std::numeric_limits<double>::max();
     }
     if (perspective == Board::P1) {
-        return wins / (double)nodeVisits + sqrt(2*log(parentVisits) / (double)nodeVisits);
+        return wins / (double)visits + sqrt(2*log(parentVisits) / (double)visits);
     }
     /* complement the exploitation factor (and keep the exploration factor) */
-    return 1 - wins / (double)nodeVisits + sqrt(2*log(parentVisits) / (double)nodeVisits);
+    return 1 - wins / (double)visits + sqrt(2*log(parentVisits) / (double)visits);
 }
 
 Node* Node::getMaxUctChild() {

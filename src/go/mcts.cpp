@@ -9,28 +9,34 @@ Node* MCTS::selectPromisingNode(Node *root) {
 }
 
 void MCTS::expandNode(Node *node) {
-    vector<State> possibleStates = node->getState().getPossibleStates();
-    for (auto it = possibleStates.begin(); it != possibleStates.end(); ++it) {
-        Node *newNode = new Node(*it);
-        newNode->setParent(node);
-        node->addChild(newNode);
+    if (node->getBoard() == NULL) {
+        Board *parentBoard = node->getParent()->getBoard();
+        Board *board = new Board(*parentBoard);
+        board->applyMove(node->getLastMove());
+        node->setBoard(board);
+    }
+    if (node->getBoard()->isOngoing()) {
+        node->setChildren(node->getPossibleSuccessors());
     }
 }
 
 int MCTS::simulateRandomPlayout(Node *node) {
-    State tempState = node->getState();
-    int boardStatus = tempState.getBoard().getStatus();
-
-    while (boardStatus == Board::ONGOING) {
-        tempState.applyRandomMove();
-        boardStatus = tempState.getBoard().getStatus();
+    if (node->getBoard() == NULL) {
+        Board *parentBoard = node->getParent()->getBoard();
+        Board *board = new Board(*parentBoard);
+        board->applyMove(node->getLastMove());
+        node->setBoard(board);
     }
-    return boardStatus;
+    Board tempBoard = Board(*node->getBoard());
+    while(tempBoard.isOngoing()) {
+        tempBoard.applyRandomMove();
+    }
+    return tempBoard.getStatus(NULL, NULL);
 }
 
 void MCTS::backpropagate(Node *nodeToExplore, int result) {
     Node *node = nodeToExplore;
-    while (node != NULL) {
+    while (node) {
         node->incrementVisits();
         if (result == Board::P1) {
             node->incrementWins();
@@ -39,9 +45,9 @@ void MCTS::backpropagate(Node *nodeToExplore, int result) {
     }
 }
 
-Board MCTS::getNextMove(Board board, int playerTurn) {
-    Node *root = new Node(State(board, playerTurn));
-    // could be limited by time
+Position MCTS::getNextMove(Board *board) {
+    Node *root = new Node(new Board(*board));
+    /* could be limited by time */
     for (int i = 0; i < MCTS::numIterations; ++i) {
 
         /* vector<Node*> children = root->getChildren();
@@ -52,9 +58,7 @@ Board MCTS::getNextMove(Board board, int playerTurn) {
         /* 1 - Selection */
         Node *promisingNode = selectPromisingNode(root);
         /* 2 - Expansion */
-        if (promisingNode->getState().getBoard().getStatus() == Board::ONGOING) {
-            expandNode(promisingNode);
-        }
+        expandNode(promisingNode);
         /* 3 - Simulation */
         Node *nodeToExplore = promisingNode;
         if (promisingNode->getChildren().size() > 0) {
@@ -71,8 +75,7 @@ Board MCTS::getNextMove(Board board, int playerTurn) {
     }
     cout << "\n"; */
 
-    Node *bestNode = root->getChildWithMaxVisits();
-    Board newBoard = bestNode->getState().getBoard();
+    Position bestMove = root->getChildWithMaxVisits()->getLastMove();
     Node::freeNode(root);
-    return newBoard;
+    return bestMove;
 }

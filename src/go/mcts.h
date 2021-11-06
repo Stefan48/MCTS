@@ -10,9 +10,9 @@ class MCTS {
     static void backpropagate(Node *nodeToExplore, int result);
 
 public:
-    const static int numIterations = 100;
+    const static int numIterations = 10;
 
-    static Board getNextMove(Board board, int playerTurn);
+    static Position getNextMove(Board *board);
 };
 
 #endif // __MCTS_H__
