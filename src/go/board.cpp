@@ -25,9 +25,10 @@ Board::Board(int boardSize, int **board) {
     this->board = new int*[boardSize];
     for (int i = 0; i < boardSize; ++i) {
         this->board[i] = new int[boardSize];
-        for (int j = 0; j < boardSize; ++j) {
+        memcpy(this->board[i], board[i], boardSize * sizeof(int));
+        /*for (int j = 0; j < boardSize; ++j) {
             this->board[i][j] = board[i][j];
-        }
+        }*/
     }
 }
 
@@ -36,9 +37,10 @@ Board::Board(int boardSize, int **board, int playerTurn) {
     this->board = new int*[boardSize];
     for (int i = 0; i < boardSize; ++i) {
         this->board[i] = new int[boardSize];
-        for (int j = 0; j < boardSize; ++j) {
+        memcpy(this->board[i], board[i], boardSize * sizeof(int));
+        /*for (int j = 0; j < boardSize; ++j) {
             this->board[i][j] = board[i][j];
-        }
+        }*/
     }
     this->playerTurn = playerTurn;
 }
@@ -48,18 +50,20 @@ Board::Board(const Board &other) {
     this->board = new int*[this->boardSize];
     for (int i = 0; i < this->boardSize; ++i) {
         this->board[i] = new int[this->boardSize];
-        for (int j = 0; j < this->boardSize; ++j) {
+        /*for (int j = 0; j < this->boardSize; ++j) {
             this->board[i][j] = other.board[i][j];
-        }
+        }*/
+        memcpy(this->board[i], other.board[i], boardSize * sizeof(int));
     }
     this->playerTurn = other.playerTurn;
     if (other.prevBoard) {
         this->prevBoard = new int*[this->boardSize];
         for (int i = 0; i < this->boardSize; ++i) {
             this->prevBoard[i] = new int[this->boardSize];
-            for (int j = 0; j < this->boardSize; ++j) {
+            /*for (int j = 0; j < this->boardSize; ++j) {
                 this->prevBoard[i][j] = other.prevBoard[i][j];
-            }
+            }*/
+            memcpy(this->prevBoard[i], other.prevBoard[i], boardSize * sizeof(int));
         }
     }
     else {
@@ -93,9 +97,10 @@ Board& Board::operator=(const Board &other)
         this->board = new int*[this->boardSize];
         for (int i = 0; i < this->boardSize; ++i) {
             this->board[i] = new int[this->boardSize];
-            for (int j = 0; j < this->boardSize; ++j) {
+            /*for (int j = 0; j < this->boardSize; ++j) {
                 this->board[i][j] = other.board[i][j];
-            }
+            }*/
+            memcpy(this->board[i], other.board[i], boardSize * sizeof(int));
         }
         this->playerTurn = other.playerTurn;
         if (this->prevBoard) {
@@ -108,9 +113,10 @@ Board& Board::operator=(const Board &other)
             this->prevBoard = new int*[this->boardSize];
             for (int i = 0; i < this->boardSize; ++i) {
                 this->prevBoard[i] = new int[this->boardSize];
-                for (int j = 0; j < this->boardSize; ++j) {
+                /*for (int j = 0; j < this->boardSize; ++j) {
                     this->prevBoard[i][j] = other.prevBoard[i][j];
-                }
+                }*/
+                memcpy(this->prevBoard[i], other.prevBoard[i], boardSize * sizeof(int));
             }
         }
         else {
@@ -123,10 +129,13 @@ Board& Board::operator=(const Board &other)
 
 bool Board::equalBoards(int **b1, int **b2, int boardSize) {
     for (int i = 0; i < boardSize; ++i) {
-        for (int j = 0; j < boardSize; ++j) {
+        /*for (int j = 0; j < boardSize; ++j) {
             if (b1[i][j] != b2[i][j]) {
                 return false;
             }
+        }*/
+        if (memcmp(b1[i], b2[i], boardSize * sizeof(int))) {
+            return false;
         }
     }
     return true;
@@ -145,9 +154,10 @@ int** Board::getBoard() {
 
 void Board::setBoard(int **board) {
     for (int i = 0; i < boardSize; ++i) {
-        for (int j = 0; j < boardSize; ++j) {
+        /*for (int j = 0; j < boardSize; ++j) {
             this->board[i][j] = board[i][j];
-        }
+        }*/
+        memcpy(this->board[i], board[i], boardSize * sizeof(int));
     }
 }
 
@@ -412,18 +422,20 @@ void Board::applyMove(Position pos) {
     /* assume the move is valid */
     if (prevBoard) {
         for (int i = 0; i < boardSize; ++i) {
-            for (int j = 0; j < boardSize; ++j) {
+            /*for (int j = 0; j < boardSize; ++j) {
                 prevBoard[i][j] = board[i][j];
-            }
+            }*/
+            memcpy(prevBoard[i], board[i], boardSize * sizeof(int));
         }
     }
     else {
         prevBoard = new int*[boardSize];
         for (int i = 0; i < boardSize; ++i) {
             prevBoard[i] = new int[boardSize];
-            for (int j = 0; j < boardSize; ++j) {
+            /*for (int j = 0; j < boardSize; ++j) {
                 prevBoard[i][j] = board[i][j];
-            }
+            }*/
+            memcpy(prevBoard[i], board[i], boardSize * sizeof(int));
         }
     }
 

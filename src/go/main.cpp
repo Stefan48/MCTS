@@ -8,7 +8,7 @@ using namespace std;
 int main()
 {
     srand(time(NULL));
-    Board board(19);
+    Board board(9);
     Position pos;
     board.printBoard();
     cout << '\n';
