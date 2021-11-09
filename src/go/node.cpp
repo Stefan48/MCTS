@@ -39,6 +39,14 @@ void Node::setBoard(Board *board) {
     this->board = board;
 }
 
+void Node::constructBoard() {
+    /* should be called only if the node has a parent and a lastMove but no board */
+    Board *parentBoard = parent->board;
+    Board *board = new Board(*parentBoard);
+    board->applyMove(lastMove);
+    this->board = board;
+}
+
 Node* Node::getParent() {
     return parent;
 }

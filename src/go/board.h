@@ -12,6 +12,7 @@ class Board {
     int playerTurn = P1;
     int **prevBoard = NULL;
     int passes = 0;
+    int winner = ONGOING;
 
     static bool equalBoards(int **b1, int **b2, int boardSize);
     void togglePlayerTurn();

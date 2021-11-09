@@ -10,10 +10,7 @@ Node* MCTS::selectPromisingNode(Node *root) {
 
 void MCTS::expandNode(Node *node) {
     if (node->getBoard() == NULL) {
-        Board *parentBoard = node->getParent()->getBoard();
-        Board *board = new Board(*parentBoard);
-        board->applyMove(node->getLastMove());
-        node->setBoard(board);
+        node->constructBoard();
     }
     if (node->getBoard()->isOngoing()) {
         node->setChildren(node->getPossibleSuccessors());
@@ -22,10 +19,7 @@ void MCTS::expandNode(Node *node) {
 
 int MCTS::simulateRandomPlayout(Node *node) {
     if (node->getBoard() == NULL) {
-        Board *parentBoard = node->getParent()->getBoard();
-        Board *board = new Board(*parentBoard);
-        board->applyMove(node->getLastMove());
-        node->setBoard(board);
+        node->constructBoard();
     }
     Board tempBoard = Board(*node->getBoard());
     while(tempBoard.isOngoing()) {

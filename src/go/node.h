@@ -25,6 +25,7 @@ public:
     Position getLastMove();
     Board *getBoard();
     void setBoard(Board *board);
+    void constructBoard();
     Node *getParent();
     void setParent(Node *parent);
     vector<Node*> getChildren();

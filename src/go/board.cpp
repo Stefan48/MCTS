@@ -213,6 +213,11 @@ int Board::getStatus(float *blackScore, float *whiteScore) {
     if (passes < 2) {
         return ONGOING;
     }
+    /* this is an optimization in order to not recompute the score
+     * when performing multiple simulations on the same final state */
+    if (winner != ONGOING && !blackScore && !whiteScore) {
+        return winner;
+    }
     float black = 0, white = KOMI;
     int playersFound, cnt;
     bool **visited = new bool*[boardSize];
@@ -249,7 +254,8 @@ int Board::getStatus(float *blackScore, float *whiteScore) {
     if (whiteScore) {
         *whiteScore = white;
     }
-    return black > white ? P1 : P2;
+    winner = black > white ? P1 : P2;
+    return winner;
 }
 
 void Board::printBoard() {
