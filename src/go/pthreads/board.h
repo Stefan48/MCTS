@@ -21,7 +21,7 @@ class Board {
     bool chainHasLiberties(int player, Position pos, bool **visited);
     bool isSuicideMove(Position pos);
     bool isKoMove(Position pos);
-    void capturePieces(int playerCaptured, Position pos, bool **visited);
+    void capturePieces(int playerCaptured, bool **visited);
 
 public:
     constexpr static float KOMI = 6.5f;

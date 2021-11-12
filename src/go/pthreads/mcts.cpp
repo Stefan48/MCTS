@@ -1,5 +1,6 @@
 #include "mcts.h"
 
+
 Node* MCTS::selectPromisingNode(Node *root) {
     Node *node = root;
     while (node->getChildren().size()) {
@@ -39,7 +40,7 @@ void MCTS::backpropagate(Node *nodeToExplore, int result) {
     }
 }
 
-Position MCTS::getNextMove(Board *board) {
+void MCTS::getNextMove(Board *board, vector< atomic <int> > *visits) {
     Node *root = new Node(new Board(*board));
     /* could be limited by time */
     for (int i = 0; i < MCTS::numIterations; ++i) {
@@ -69,7 +70,15 @@ Position MCTS::getNextMove(Board *board) {
     }
     cout << "\n"; */
 
-    Position bestMove = root->getChildWithMaxVisits()->getLastMove();
+    vector<Node*> children = root->getChildren();
+    for (int i = 0; i < (int)children.size(); ++i) {
+        Position pos = children[i]->getLastMove();
+        if (pos.x == -1 && pos.y == -1) {
+            (*visits)[0] += children[i]->getVisits();
+        }
+        else {
+            (*visits)[pos.x * board->getBoardSize() + pos.y + 1] += children[i]->getVisits();
+        }
+    }
     Node::freeNode(root);
-    return bestMove;
 }

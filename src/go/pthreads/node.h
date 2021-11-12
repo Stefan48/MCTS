@@ -34,6 +34,8 @@ public:
     void addChild(Node *node);
     Node *getRandomChildNode();
     Node *getChildWithMaxVisits();
+    int getWins();
+    int getVisits();
     void incrementWins();
     void incrementVisits();
     double getUctValue();

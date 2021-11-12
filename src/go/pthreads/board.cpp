@@ -388,7 +388,7 @@ vector<Position> Board::getValidMoves() {
     return moves;
 }
 
-void Board::capturePieces(int playerCaptured, Position pos, bool **visited) {
+void Board::capturePieces(int playerCaptured, bool **visited) {
     for (int i = 0; i < boardSize; ++i) {
         for (int j = 0; j < boardSize; ++j) {
             if (board[i][j] == playerCaptured && visited[i][j]){
@@ -429,7 +429,7 @@ void Board::applyMove(Position pos) {
     int opponent = this->getCurrentOpponent();
     if (pos.x+1 < boardSize && board[pos.x+1][pos.y] == opponent) {
         if (!chainHasLiberties(opponent, Position(pos.x+1, pos.y), visited)) {
-            capturePieces(opponent, Position(pos.x+1, pos.y), visited);
+            capturePieces(opponent, visited);
         }
         for (int i = 0; i < boardSize; ++i) {
             memset(visited[i], 0, boardSize * sizeof(bool));
@@ -438,7 +438,7 @@ void Board::applyMove(Position pos) {
     }
     if (pos.y+1 < boardSize && board[pos.x][pos.y+1] == opponent) {
         if (!chainHasLiberties(opponent, Position(pos.x, pos.y+1), visited)) {
-            capturePieces(opponent, Position(pos.x, pos.y+1), visited);
+            capturePieces(opponent, visited);
         }
         for (int i = 0; i < boardSize; ++i) {
             memset(visited[i], 0, boardSize * sizeof(bool));
@@ -447,7 +447,7 @@ void Board::applyMove(Position pos) {
     }
     if (pos.x-1 >= 0 && board[pos.x-1][pos.y] == opponent) {
         if (!chainHasLiberties(opponent, Position(pos.x -1, pos.y), visited)) {
-            capturePieces(opponent, Position(pos.x-1, pos.y), visited);
+            capturePieces(opponent, visited);
         }
         for (int i = 0; i < boardSize; ++i) {
             memset(visited[i], 0, boardSize * sizeof(bool));
@@ -456,7 +456,7 @@ void Board::applyMove(Position pos) {
     }
     if (pos.y-1 >= 0 && board[pos.x][pos.y-1] == opponent) {
         if (!chainHasLiberties(opponent, Position(pos.x, pos.y - 1), visited)) {
-            capturePieces(opponent, Position(pos.x, pos.y-1), visited);
+            capturePieces(opponent, visited);
         }
     }
     for (int i = 0; i < boardSize; ++i) {

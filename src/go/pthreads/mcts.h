@@ -12,7 +12,7 @@ class MCTS {
 public:
     const static int numIterations = 1000;
 
-    static Position getNextMove(Board *board);
+    static void getNextMove(Board *board, vector< atomic<int> > *visits);
 };
 
 #endif // __MCTS_H__

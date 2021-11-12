@@ -3,23 +3,91 @@
 #include "board.h"
 #include "node.h"
 #include "mcts.h"
+#include <pthread.h>
+
 using namespace std;
+
+
+struct ThreadParam {
+    bool *ongoing;
+    Board *board;
+    vector< atomic<int> > *visits;
+    pthread_barrier_t *barrier;
+};
+
+void *threadFunction(void *arg)
+{
+    ThreadParam threadParam = *(ThreadParam*) arg;
+    while (*threadParam.ongoing) {
+        pthread_barrier_wait(threadParam.barrier);
+        MCTS::getNextMove(threadParam.board, threadParam.visits);
+        pthread_barrier_wait(threadParam.barrier);
+    }
+    pthread_exit(NULL);
+}
 
 int main()
 {
     srand(time(NULL));
-    Board board(9);
-    Position pos;
-    board.printBoard();
-    cout << '\n';
-    while (board.isOngoing()) {
-        pos = MCTS::getNextMove(&board);
-        cout << pos.x << ' ' << pos.y << '\n';
-        board.applyMove(pos);
-        board.printBoard();
-        cout << '\n';
+    int numGames = 1;
+    int NUM_THREADS = 7;
+    int boardSize = 9;
+    Board board(boardSize);
+    bool ongoing = true;
+    pthread_t ptid[NUM_THREADS];
+    int maxMoves = boardSize * boardSize + 1;
+    ThreadParam threadParams[NUM_THREADS];
+    vector< atomic<int> > visits(maxMoves);
+    pthread_barrier_t barrier;
+    pthread_barrier_init(&barrier, NULL, NUM_THREADS + 1);
+    int r;
+    for (int i = 0; i < NUM_THREADS; i++) {
+        threadParams[i].ongoing = &ongoing;
+        threadParams[i].board = &board;
+        threadParams[i].visits = &visits;
+        threadParams[i].barrier = &barrier;
+        r = pthread_create(&ptid[i], NULL, threadFunction, &threadParams[i]);
+        if (r) {
+
+            cout<<"Error on creating thread\n";
+            return -1;
+        }
     }
-    board.printStatus();
+
+    while (numGames) {
+        //board.printBoard();
+        //cout << '\n';
+
+        while (ongoing) {
+            pthread_barrier_wait(&barrier);
+            MCTS::getNextMove(&board, &visits);
+            int bestMove, maxVisits = -1;
+            for (int i = 0; i < (int)visits.size(); ++i) {
+                if (visits[i] >= maxVisits) {
+                    maxVisits = visits[i];
+                    bestMove = i;
+                }
+            }
+            Position pos;
+            if (bestMove == 0) {
+                pos = Position(-1, -1);
+            }
+            else {
+                pos = Position((bestMove-1) / board.getBoardSize(), (bestMove-1) % board.getBoardSize());
+            }
+            cout << pos.x << ' ' << pos.y << '\n';
+            board.applyMove(pos);
+            //board.printBoard();
+            //cout << '\n';
+            ongoing = board.isOngoing();
+            visits = vector< atomic<int> >(maxMoves);
+            pthread_barrier_wait(&barrier);
+        }
+        //board.printStatus();
+        //cout << '\n';
+        numGames--;
+    }
+
 
 
     /* srand(time(NULL));
