@@ -39,10 +39,10 @@ void MCTS::backpropagate(Node *nodeToExplore, int result) {
     }
 }
 
-Position MCTS::getNextMove(Board *board) {
+Position MCTS::getNextMove(Board *board, int numIterations) {
     Node *root = new Node(new Board(*board));
     /* could be limited by time */
-    for (int i = 0; i < MCTS::numIterations; ++i) {
+    for (int i = 0; i < numIterations; ++i) {
 
         /* vector<Node*> children = root->getChildren();
         for (int i = 0; i < children.size(); ++i) {
