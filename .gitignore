@@ -1,1 +1,3 @@
 src/go/MCTS
+*.o
+main
