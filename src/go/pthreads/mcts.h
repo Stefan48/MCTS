@@ -10,9 +10,7 @@ class MCTS {
     static void backpropagate(Node *nodeToExplore, int result);
 
 public:
-    const static int numIterations = 1000;
-
-    static void getNextMove(Board *board, vector< atomic<int> > *visits);
+    static void evaluateMoves(Board *board, vector< atomic<int> > *visits, int numIterations);
 };
 
 #endif // __MCTS_H__
