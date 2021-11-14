@@ -468,6 +468,7 @@ void Board::applyMove(Position pos) {
 
 void Board::applyRandomMove() {
     vector<Position> moves = getValidMoves();
+    //TODO replace 'rand'
     int chosen = rand() % moves.size();
     applyMove(moves[chosen]);
     this->togglePlayerTurn();

@@ -36,6 +36,7 @@ void *threadFunction(void *arg)
 
 int main()
 {
+    // TODO replace 'srand'
     srand(time(NULL));
     
     Board board;
@@ -96,8 +97,7 @@ int main()
                 visits = vector< atomic<int> >(maxMoves);
                 pthread_barrier_wait(&barrier);
             }
-            else
-            {
+            else {
                 cout << "Game " << i << " finished\n";
                 if (board.getStatus(NULL, NULL) == Board::P1) {
                     winsBlack++;

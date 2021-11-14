@@ -79,6 +79,7 @@ void Node::addChild(Node *node) {
 }
 
 Node* Node::getRandomChildNode() {
+    // TODO replace 'rand'
     return children[rand() % children.size()];
 }
 
