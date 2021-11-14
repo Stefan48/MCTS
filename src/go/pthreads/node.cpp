@@ -99,6 +99,7 @@ Node* Node::getChildWithMaxVisits() {
 int Node::getWins() {
     return wins;
 }
+
 int Node::getVisits() {
     return visits;
 }

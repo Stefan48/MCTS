@@ -44,10 +44,10 @@ void MCTS::evaluateMoves(Board *board, vector< atomic <int> > *visits, int numIt
     /* could be limited by time */
     for (int i = 0; i < numIterations; ++i) {
 
-        /* vector<Node*> children = root->getChildren();
+        /*vector<Node*> children = root->getChildren();
         for (int i = 0; i < children.size(); ++i) {
             cout << i << ": " << children[i]->getUctValue() << "\n";
-        } */
+        }*/
 
         /* 1 - Selection */
         Node *promisingNode = selectPromisingNode(root);
@@ -62,14 +62,13 @@ void MCTS::evaluateMoves(Board *board, vector< atomic <int> > *visits, int numIt
         /* 4 - Backpropagation */
         backpropagate(nodeToExplore, result);
     }
-
-    /* vector<Node*> children = root->getChildren();
-    for (auto it = children.begin(); it != children.end(); ++it) {
-        cout << (*it)->getState().getWins() << "/" << (*it)->getState().getVisits() << "\n";
-    }
-    cout << "\n"; */
-
     vector<Node*> children = root->getChildren();
+    
+    /*for (auto it = children.begin(); it != children.end(); ++it) {
+        cout << (*it)->getWins() << "/" << (*it)->getVisits() << "\t";
+    }
+    cout << "\n";*/
+    
     for (int i = 0; i < (int)children.size(); ++i) {
         Position pos = children[i]->getLastMove();
         if (pos.x == -1 && pos.y == -1) {

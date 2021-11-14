@@ -12,7 +12,7 @@ using namespace std;
 int main()
 {
     // single game
-    /* srand(time(NULL));
+    /*srand(time(NULL));
     Board board(BOARD_SIZE);
     board.printBoard();
     cout << '\n';
@@ -24,7 +24,7 @@ int main()
         cout << '\n';
     }
     board.printStatus();
-    cout << '\n'; */
+    cout << '\n';*/
 
     // multiple games
     srand(time(NULL));
@@ -40,6 +40,7 @@ int main()
         else {
             winsWhite++;
         }
+        cout << "Game " << i << " finished\n";
     }
     cout << "Black " << winsBlack << " - " << winsWhite << " White\n";
 

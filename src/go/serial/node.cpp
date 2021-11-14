@@ -96,6 +96,14 @@ Node* Node::getChildWithMaxVisits() {
     return child;
 }
 
+int Node::getWins() {
+    return wins;
+}
+
+int Node::getVisits() {
+    return visits;
+}
+
 void Node::incrementWins() {
     this->wins++;
 }
