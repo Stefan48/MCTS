@@ -9,7 +9,7 @@ using namespace std;
 
 #define BOARD_SIZE 9
 #define NUM_GAMES 1
-#define ITERATIONS_PER_MOVE 25000
+#define ITERATIONS_PER_MOVE 100
 
 struct ThreadArgs {
     int threadId;
@@ -86,10 +86,8 @@ int main()
             else {
                 pos = Position((bestMove-1) / board.getBoardSize(), (bestMove-1) % board.getBoardSize());
             }
-            cout << pos.x << " " << pos.y << "\n";
+            // cout << pos.x << " " << pos.y << "\n";
             board.applyMove(pos);
-            board.printBoard();
-            cout << "\n";
             ongoing = board.isOngoing();
             if (ongoing) {
                 visits = vector< atomic<int> >(maxMoves);
