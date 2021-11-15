@@ -8,8 +8,8 @@
 using namespace std;
 
 #define BOARD_SIZE 9
-#define NUM_GAMES 10
-#define ITERATIONS_PER_MOVE 100
+#define NUM_GAMES 1
+#define ITERATIONS_PER_MOVE 25000
 
 struct ThreadArgs {
     int threadId;
@@ -23,10 +23,10 @@ struct ThreadArgs {
 void *threadFunction(void *arg)
 {
     ThreadArgs *args = (ThreadArgs*)arg;
+    unsigned int seed = time(NULL) + args->threadId;
     pthread_barrier_wait(args->barrier);
     while (*args->ongoing) {
-        MCTS::evaluateMoves(args->board, args->visits, args->numIterations);
-        //cout << "Thread " << args->threadId << " evaluated\n";
+        MCTS::evaluateMoves(args->board, args->visits, args->numIterations, &seed);
         pthread_barrier_wait(args->barrier);
         /* wait for master thread to decide and apply the overall best move */
         pthread_barrier_wait(args->barrier);
@@ -36,15 +36,17 @@ void *threadFunction(void *arg)
 
 int main()
 {
-    // TODO replace 'srand'
-    srand(time(NULL));
-    
+    unsigned int seed = time(NULL);
     Board board;
     bool ongoing;
     int maxMoves = BOARD_SIZE * BOARD_SIZE + 1;
     vector< atomic<int> > visits;
     
+#ifdef NUM_THREADS
+    int numThreads = NUM_THREADS;
+#else
     int numThreads = get_nprocs();
+#endif
     int iterationsPerThread = ITERATIONS_PER_MOVE / numThreads + 1;
     pthread_t threads[numThreads-1];
     ThreadArgs threadArgs[numThreads-1];
@@ -68,14 +70,8 @@ int main()
     pthread_barrier_wait(&barrier);
     for (int i = 0; i < NUM_GAMES; ++i) {
         while (true) {
-            MCTS::evaluateMoves(&board, &visits, iterationsPerThread);
-            //cout << "Master evaluated\n";
-            pthread_barrier_wait(&barrier);
-            
-            /*for (int i = 0; i < maxMoves; ++i)
-                cout << visits[i] << " ";
-            cout << "\n~~~~~~~~~\n";*/
-            
+            MCTS::evaluateMoves(&board, &visits, iterationsPerThread, &seed);
+            pthread_barrier_wait(&barrier); 
             int bestMove, maxVisits = -1;
             for (int j = 0; j < (int)visits.size(); ++j) {
                 if (visits[j] >= maxVisits) {
@@ -90,8 +86,10 @@ int main()
             else {
                 pos = Position((bestMove-1) / board.getBoardSize(), (bestMove-1) % board.getBoardSize());
             }
-            //cout << pos.x << " " << pos.y << "\n";
+            cout << pos.x << " " << pos.y << "\n";
             board.applyMove(pos);
+            board.printBoard();
+            cout << "\n";
             ongoing = board.isOngoing();
             if (ongoing) {
                 visits = vector< atomic<int> >(maxMoves);

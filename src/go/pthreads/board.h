@@ -53,7 +53,7 @@ public:
     void printStatus();
     vector<Position> getValidMoves();
     void applyMove(Position pos);
-    void applyRandomMove();
+    void applyRandomMove(unsigned int *seed);
 };
 
 #endif // __BOARD_H__

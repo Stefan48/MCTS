@@ -78,9 +78,8 @@ void Node::addChild(Node *node) {
     children.push_back(node);
 }
 
-Node* Node::getRandomChildNode() {
-    // TODO replace 'rand'
-    return children[rand() % children.size()];
+Node* Node::getRandomChildNode(unsigned int *seed) {
+    return children[rand_r(seed) % children.size()];
 }
 
 Node* Node::getChildWithMaxVisits() {
@@ -134,7 +133,7 @@ Node* Node::getMaxUctChild() {
     double uctValue;
     for (int i = 0; i < (int)children.size(); ++i) {
         uctValue = children[i]->getUctValue();
-        if (uctValue > maxUctValue) {
+        if (uctValue >= maxUctValue) {
             maxUctValue = uctValue;
             maxUctNode = children[i];
         }

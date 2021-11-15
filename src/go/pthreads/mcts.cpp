@@ -17,13 +17,13 @@ void MCTS::expandNode(Node *node) {
     }
 }
 
-int MCTS::simulateRandomPlayout(Node *node) {
+int MCTS::simulateRandomPlayout(Node *node, unsigned int *seed) {
     if (node->getBoard() == NULL) {
         node->constructBoard();
     }
     Board tempBoard = Board(*node->getBoard());
     while(tempBoard.isOngoing()) {
-        tempBoard.applyRandomMove();
+        tempBoard.applyRandomMove(seed);
     }
     return tempBoard.getStatus(NULL, NULL);
 }
@@ -39,7 +39,7 @@ void MCTS::backpropagate(Node *nodeToExplore, int result) {
     }
 }
 
-void MCTS::evaluateMoves(Board *board, vector< atomic <int> > *visits, int numIterations) {
+void MCTS::evaluateMoves(Board *board, vector< atomic <int> > *visits, int numIterations, unsigned int *seed) {
     Node *root = new Node(new Board(*board));
     /* could be limited by time */
     for (int i = 0; i < numIterations; ++i) {
@@ -47,7 +47,8 @@ void MCTS::evaluateMoves(Board *board, vector< atomic <int> > *visits, int numIt
         /*vector<Node*> children = root->getChildren();
         for (int i = 0; i < children.size(); ++i) {
             cout << i << ": " << children[i]->getUctValue() << "\n";
-        }*/
+        }
+        cout << "\n";*/
 
         /* 1 - Selection */
         Node *promisingNode = selectPromisingNode(root);
@@ -56,9 +57,9 @@ void MCTS::evaluateMoves(Board *board, vector< atomic <int> > *visits, int numIt
         /* 3 - Simulation */
         Node *nodeToExplore = promisingNode;
         if (promisingNode->getChildren().size() > 0) {
-            nodeToExplore = promisingNode->getRandomChildNode();
+            nodeToExplore = promisingNode->getRandomChildNode(seed);
         }
-        int result = simulateRandomPlayout(nodeToExplore);
+        int result = simulateRandomPlayout(nodeToExplore, seed);
         /* 4 - Backpropagation */
         backpropagate(nodeToExplore, result);
     }

@@ -32,7 +32,7 @@ public:
     void setChildren(vector<Node*> children);
     vector<Node*> getPossibleSuccessors();
     void addChild(Node *node);
-    Node *getRandomChildNode();
+    Node *getRandomChildNode(unsigned int *seed);
     Node *getChildWithMaxVisits();
     int getWins();
     int getVisits();
