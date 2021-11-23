@@ -8,7 +8,7 @@
 using namespace std;
 
 #define BOARD_SIZE 9
-#define NUM_GAMES 1
+#define NUM_GAMES 10
 #define ITERATIONS_PER_MOVE 100
 
 struct ThreadArgs {
@@ -74,7 +74,7 @@ int main()
             pthread_barrier_wait(&barrier); 
             int bestMove, maxVisits = -1;
             for (int j = 0; j < (int)visits.size(); ++j) {
-                if (visits[j] >= maxVisits) {
+                if (visits[j] > maxVisits) {
                     maxVisits = visits[j];
                     bestMove = j;
                 }
@@ -86,8 +86,10 @@ int main()
             else {
                 pos = Position((bestMove-1) / board.getBoardSize(), (bestMove-1) % board.getBoardSize());
             }
-            // cout << pos.x << " " << pos.y << "\n";
+            //cout << pos.x << " " << pos.y << "\n";
             board.applyMove(pos);
+            //board.printBoard();
+            //cout << "\n";
             ongoing = board.isOngoing();
             if (ongoing) {
                 visits = vector< atomic<int> >(maxMoves);

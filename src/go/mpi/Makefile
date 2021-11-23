@@ -22,11 +22,6 @@ node.o: node.cpp
 mcts.o: mcts.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY: run	
-run:
-	mpirun -np 4 main
-
 .PHONY: clean
-
 clean:
 	rm -f *.o main

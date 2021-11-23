@@ -6,7 +6,6 @@
 using namespace std;
 
 class Board {
-    public:
     int boardSize;
     int **board = NULL;
     int playerTurn = P1;

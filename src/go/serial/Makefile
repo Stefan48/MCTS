@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -Wall -Wextra -O0
+CFLAGS = -std=c++11 -Wall -Wextra -O0
 
 .PHONY: build
 build: main
