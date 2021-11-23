@@ -34,19 +34,19 @@ void *threadFunction(void *arg)
     pthread_exit(NULL);
 }
 
-int main()
-{
+int main(int argc, char *argv[]) {
     unsigned int seed = time(NULL);
     Board board;
     bool ongoing;
     int maxMoves = BOARD_SIZE * BOARD_SIZE + 1;
     vector< atomic<int> > visits;
-    
-#ifdef NUM_THREADS
-    int numThreads = NUM_THREADS;
-#else
-    int numThreads = get_nprocs();
-#endif
+    int numThreads;
+    if (argc > 1) {
+        numThreads = atoi(argv[1]);
+    }
+    else {
+        numThreads = get_nprocs();
+    }
     int iterationsPerThread = ITERATIONS_PER_MOVE / numThreads + 1;
     pthread_t threads[numThreads-1];
     ThreadArgs threadArgs[numThreads-1];

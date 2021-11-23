@@ -9,8 +9,7 @@ using namespace std;
 #define NUM_GAMES 10
 #define ITERATIONS_PER_MOVE 100
 
-int main()
-{
+int main() {
     // single game
     /*srand(time(NULL));
     Board board(BOARD_SIZE);

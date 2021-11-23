@@ -10,8 +10,7 @@ using namespace std;
 #define NUM_GAMES 10
 #define ITERATIONS_PER_MOVE 100
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     // TODO private attributes in class Board; no need to broadcast boardSize
     MPI_Init(&argc, &argv);
     int numProc, rank;
