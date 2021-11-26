@@ -11,7 +11,6 @@ using namespace std;
 #define ITERATIONS_PER_MOVE 100
 
 int main(int argc, char *argv[]) {
-    // TODO private attributes in class Board; no need to broadcast boardSize
     MPI_Init(&argc, &argv);
     int numProc, rank;
     MPI_Comm_size(MPI_COMM_WORLD, &numProc);
@@ -29,12 +28,13 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < NUM_GAMES; ++i) {
             Board board(boardSize);
             while (board.isOngoing()) {
-                MPI_Bcast(&board.boardSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
-                for(int i = 0; i < board.boardSize; ++i) {
-                    MPI_Bcast(board.board[i], board.boardSize, MPI_INT, 0, MPI_COMM_WORLD);
+                int playerTurn = board.getPlayerTurn();
+                MPI_Bcast(&playerTurn, 1, MPI_INT, 0, MPI_COMM_WORLD);
+                int passes = board.getPasses();
+                MPI_Bcast(&passes, 1, MPI_INT, 0, MPI_COMM_WORLD);
+                for(int i = 0; i < boardSize; ++i) {
+                    MPI_Bcast(board.getBoard()[i], boardSize, MPI_INT, 0, MPI_COMM_WORLD);
                 }
-                MPI_Bcast(&board.playerTurn, 1, MPI_INT, 0, MPI_COMM_WORLD);
-                MPI_Bcast(&board.passes, 1, MPI_INT, 0, MPI_COMM_WORLD);
                 MCTS::evaluateMoves(&board, visits, iterationsPerProcess);
                 for(int j = 1; j < numProc; ++j) {
                     MPI_Recv(visitsRecv, maxMoves, MPI_INT, j, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -54,15 +54,15 @@ int main(int argc, char *argv[]) {
                     pos = Position(-1, -1);
                 }
                 else {
-                    pos = Position((bestMove-1) / board.getBoardSize(), (bestMove-1) % board.getBoardSize());
+                    pos = Position((bestMove-1) / boardSize, (bestMove-1) % boardSize);
                 }
-                //cout << pos.x << " " << pos.y << "\n";
+                cout << pos.x << " " << pos.y << "\n";
                 board.applyMove(pos);
-                //board.printBoard();
-                //cout << "\n";
+                board.printBoard();
+                cout << "\n";
                 
-                for(int i = 0; i < board.boardSize; ++i) {
-                    MPI_Bcast(board.prevBoard[i], board.boardSize, MPI_INT, 0, MPI_COMM_WORLD);
+                for(int i = 0; i < boardSize; ++i) {
+                    MPI_Bcast(board.getPrevBoard()[i], boardSize, MPI_INT, 0, MPI_COMM_WORLD);
                 }
             }
             cout << "Game " << i << " finished\n";
@@ -73,6 +73,7 @@ int main(int argc, char *argv[]) {
                 winsWhite++;
             }
         }
+        /* stop condition */
         int stop = -1;
         MPI_Bcast(&stop, 1, MPI_INT, 0, MPI_COMM_WORLD);
         cout << "Black " << winsBlack << " - " << winsWhite << " White\n";
@@ -85,19 +86,22 @@ int main(int argc, char *argv[]) {
             prevBoard[i] = new int[boardSize];
         }
         while (true) {
-            MPI_Bcast(&board.boardSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
-            if (board.boardSize <= 0) {
+            int playerTurn;
+            MPI_Bcast(&playerTurn, 1, MPI_INT, 0, MPI_COMM_WORLD);
+            if (playerTurn <= 0) {
                 break;
             }
-            for(int i = 0; i < board.boardSize; ++i) {
-                MPI_Bcast(board.board[i], board.boardSize, MPI_INT, 0, MPI_COMM_WORLD);
+            board.setPlayerTurn(playerTurn);
+            int passes;
+            MPI_Bcast(&passes, 1, MPI_INT, 0, MPI_COMM_WORLD);
+            board.setPasses(passes);
+            for(int i = 0; i < boardSize; ++i) {
+                MPI_Bcast(board.getBoard()[i], boardSize, MPI_INT, 0, MPI_COMM_WORLD);
             }
-            MPI_Bcast(&board.playerTurn, 1, MPI_INT, 0, MPI_COMM_WORLD);
-            MPI_Bcast(&board.passes, 1, MPI_INT, 0, MPI_COMM_WORLD);
             MCTS::evaluateMoves(&board, visits, iterationsPerProcess);
             MPI_Send(visits, maxMoves, MPI_INT, 0, 0, MPI_COMM_WORLD);
-            for(int i = 0; i < board.boardSize; ++i) {
-                MPI_Bcast(prevBoard[i], board.boardSize, MPI_INT, 0, MPI_COMM_WORLD);
+            for(int i = 0; i < boardSize; ++i) {
+                MPI_Bcast(prevBoard[i], boardSize, MPI_INT, 0, MPI_COMM_WORLD);
             }
             board.setPrevBoard(prevBoard);
         }

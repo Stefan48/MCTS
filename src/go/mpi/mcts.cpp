@@ -70,7 +70,8 @@ void MCTS::evaluateMoves(Board *board, int *visits, int numIterations) {
     }
     cout << "\n";*/
     
-    memset(visits, 0, (board->boardSize * board->boardSize + 1) * sizeof(int));
+    int boardSize = board->getBoardSize();
+    memset(visits, 0, (boardSize * boardSize + 1) * sizeof(int));
     for (int i = 0; i < (int)children.size(); ++i) {
         Position pos = children[i]->getLastMove();
         if (pos.x == -1 && pos.y == -1) {

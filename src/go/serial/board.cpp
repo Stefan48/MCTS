@@ -130,9 +130,7 @@ int** Board::getBoard() {
 }
 
 void Board::setBoard(int **board) {
-    for (int i = 0; i < boardSize; ++i) {
-        memcpy(this->board[i], board[i], boardSize * sizeof(int));
-    }
+    this->board = board;
 }
 
 int Board::getBoardSize() {
