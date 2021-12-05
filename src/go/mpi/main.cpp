@@ -56,10 +56,10 @@ int main(int argc, char *argv[]) {
                 else {
                     pos = Position((bestMove-1) / boardSize, (bestMove-1) % boardSize);
                 }
-                cout << pos.x << " " << pos.y << "\n";
+                //cout << pos.x << " " << pos.y << "\n";
                 board.applyMove(pos);
-                board.printBoard();
-                cout << "\n";
+                //board.printBoard();
+                //cout << "\n";
                 
                 for(int i = 0; i < boardSize; ++i) {
                     MPI_Bcast(board.getPrevBoard()[i], boardSize, MPI_INT, 0, MPI_COMM_WORLD);
