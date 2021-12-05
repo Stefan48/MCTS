@@ -8,8 +8,8 @@
 using namespace std;
 
 #define BOARD_SIZE 9
-#define NUM_GAMES 1
-#define ITERATIONS_PER_MOVE 1000
+#define NUM_GAMES 10
+#define ITERATIONS_PER_MOVE 100
 
 
 int main(int argc, char *argv[]) {
@@ -55,10 +55,10 @@ int main(int argc, char *argv[]) {
                     else {
                         pos = Position((bestMove-1) / board.getBoardSize(), (bestMove-1) % board.getBoardSize());
                     }
-                    cout << pos.x << " " << pos.y << "\n";
+                    //cout << pos.x << " " << pos.y << "\n";
                     board.applyMove(pos);
-                    board.printBoard();
-                    cout << "\n";
+                    //board.printBoard();
+                    //cout << "\n";
                     ongoing = board.isOngoing();
                     if (ongoing) {
                         visits = vector< atomic<int> >(maxMoves);
