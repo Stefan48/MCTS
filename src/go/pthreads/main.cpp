@@ -28,7 +28,7 @@ void *threadFunction(void *arg)
     while (*args->ongoing) {
         MCTS::evaluateMoves(args->board, args->visits, args->numIterations, &seed);
         pthread_barrier_wait(args->barrier);
-        /* wait for master thread to decide and apply the overall best move */
+        /* wait for master thread to decide and apply the chosen move */
         pthread_barrier_wait(args->barrier);
     }
     pthread_exit(NULL);
@@ -72,24 +72,19 @@ int main(int argc, char *argv[]) {
         while (true) {
             MCTS::evaluateMoves(&board, &visits, iterationsPerThread, &seed);
             pthread_barrier_wait(&barrier); 
-            int bestMove, maxVisits = -1;
-            for (int j = 0; j < (int)visits.size(); ++j) {
+            int chosenMove, maxVisits = -1;
+            for (int j = 0; j < maxMoves; ++j) {
                 if (visits[j] > maxVisits) {
                     maxVisits = visits[j];
-                    bestMove = j;
+                    chosenMove = j;
                 }
             }
-            Position pos;
-            if (bestMove == 0) {
-                pos = Position(-1, -1);
+            if (chosenMove == 0) {
+                board.applyMove(Position(-1, -1));
             }
             else {
-                pos = Position((bestMove-1) / board.getBoardSize(), (bestMove-1) % board.getBoardSize());
+                board.applyMove(Position((chosenMove-1)/board.getBoardSize(), (chosenMove-1)%board.getBoardSize()));
             }
-            //cout << pos.x << " " << pos.y << "\n";
-            board.applyMove(pos);
-            //board.printBoard();
-            //cout << "\n";
             ongoing = board.isOngoing();
             if (ongoing) {
                 visits = vector< atomic<int> >(maxMoves);
