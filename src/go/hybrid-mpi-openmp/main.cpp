@@ -10,8 +10,8 @@ using namespace std;
 
 #define MAX_THREADS 1024
 #define BOARD_SIZE 9
-#define NUM_GAMES 1
-#define ITERATIONS_PER_MOVE 5000
+#define NUM_GAMES 10
+#define ITERATIONS_PER_MOVE 100
 
 int main(int argc, char *argv[]) {
     MPI_Init(&argc, &argv);
@@ -21,22 +21,28 @@ int main(int argc, char *argv[]) {
 
     Board board;
     bool ongoing;
-    int maxMoves = BOARD_SIZE * BOARD_SIZE + 1;
+    int boardSize = BOARD_SIZE;
+    int maxMoves = boardSize * boardSize + 1;
     vector< atomic<int> > visits;
-    int numThreads = get_nprocs();
-    cout << "rank=" << rank << " numThreads=" << numThreads << "\n";
+    int numThreads;
+    if (argc > 1) {
+        numThreads = atoi(argv[1]);
+    }
+    else {
+        numThreads = get_nprocs();
+    }
     omp_set_num_threads(numThreads);
     int iterationsPerThread = ITERATIONS_PER_MOVE / (numProc * numThreads) + 1;
     
     if (rank == 0) {
-        #pragma omp parallel default(none) shared(numProc, board, ongoing, visits, iterationsPerThread, maxMoves, ompi_mpi_comm_world, ompi_mpi_int, ompi_mpi_cxx_bool, cout)
+        #pragma omp parallel default(none) shared(numProc, board, ongoing, boardSize, visits, iterationsPerThread, maxMoves, ompi_mpi_comm_world, ompi_mpi_int, ompi_mpi_cxx_bool, cout)
         {
             int threadId = omp_get_thread_num();
             unsigned int seed = time(NULL) + threadId;
             if (threadId == 0) {
                 int winsBlack = 0, winsWhite = 0;
                 int *visitsRecv = new int[maxMoves];
-                board = Board(BOARD_SIZE);
+                board = Board(boardSize);
                 ongoing = true;
                 visits = vector< atomic<int> >(maxMoves);
                 #pragma omp barrier
@@ -62,10 +68,8 @@ int main(int argc, char *argv[]) {
                             board.applyMove(Position(-1, -1));
                         }
                         else {
-                            board.applyMove(Position((chosenMove-1)/board.getBoardSize(), (chosenMove-1)%board.getBoardSize()));
+                            board.applyMove(Position((chosenMove-1)/boardSize, (chosenMove-1)%boardSize));
                         }
-                        //board.printBoard();
-                        //cout << "\n";
                         ongoing = board.isOngoing();
                         if (ongoing) {
                             visits = vector< atomic<int> >(maxMoves);
@@ -80,15 +84,9 @@ int main(int argc, char *argv[]) {
                                 winsWhite++;
                             }
                             if (i < NUM_GAMES - 1) {
-                                bool stop = false;
-                                MPI_Bcast(&stop, 1, MPI_CXX_BOOL, 0, MPI_COMM_WORLD);
-                                board = Board(BOARD_SIZE);
+                                board = Board(boardSize);
                                 ongoing = true;
                                 visits = vector< atomic<int> >(maxMoves);
-                            }
-                            else {
-                                bool stop = true;
-                                MPI_Bcast(&stop, 1, MPI_CXX_BOOL, 0, MPI_COMM_WORLD);
                             }
                             #pragma omp barrier
                             break;
@@ -96,7 +94,7 @@ int main(int argc, char *argv[]) {
                     }
                 }
                 cout << "Black " << winsBlack << " - " << winsWhite << " White\n";
-                   delete[] visitsRecv;
+                delete[] visitsRecv;
             }
             else {
                 #pragma omp barrier
@@ -110,7 +108,7 @@ int main(int argc, char *argv[]) {
         }
     }
     else {
-        #pragma omp parallel default(none) shared(numProc, rank, board, ongoing, visits, iterationsPerThread, maxMoves, ompi_mpi_comm_world, ompi_mpi_int, ompi_mpi_cxx_bool, cout)
+        #pragma omp parallel default(none) shared(numProc, rank, board, ongoing, boardSize, visits, iterationsPerThread, maxMoves, ompi_mpi_comm_world, ompi_mpi_int, ompi_mpi_cxx_bool, cout)
         {
             int threadId = omp_get_thread_num();
             unsigned int seed = time(NULL) + rank * MAX_THREADS + threadId;
@@ -120,11 +118,10 @@ int main(int argc, char *argv[]) {
                 if (differentSizes) {
                     visitsSend = new int[maxMoves];
                 }
-                board = Board(BOARD_SIZE);
+                board = Board(boardSize);
                 ongoing = true;
                 visits = vector< atomic<int> >(maxMoves);
                 int chosenMove;
-                bool stop;
                 #pragma omp barrier
                 for (int i = 0; i < NUM_GAMES; ++i) {
                     while (true) {
@@ -144,7 +141,7 @@ int main(int argc, char *argv[]) {
                             board.applyMove(Position(-1, -1));
                         }
                         else {
-                            board.applyMove(Position((chosenMove-1)/board.getBoardSize(), (chosenMove-1)%board.getBoardSize()));
+                            board.applyMove(Position((chosenMove-1)/boardSize, (chosenMove-1)%boardSize));
                         }
                         ongoing = board.isOngoing();
                         if (ongoing) {
@@ -152,9 +149,8 @@ int main(int argc, char *argv[]) {
                             #pragma omp barrier
                         }
                         else {
-                            MPI_Bcast(&stop, 1, MPI_CXX_BOOL, 0, MPI_COMM_WORLD);
-                            if (!stop) {
-                                board = Board(BOARD_SIZE);
+                            if (i < NUM_GAMES - 1) {
+                                board = Board(boardSize);
                                 ongoing = true;
                                 visits = vector< atomic<int> >(maxMoves);
                             }
