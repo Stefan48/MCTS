@@ -21,18 +21,18 @@ int main(int argc, char *argv[]) {
     int maxMoves = boardSize * boardSize + 1;
     int *visits = new int[maxMoves];
     int iterationsPerProcess = ITERATIONS_PER_MOVE / numProc + 1;
-    int winsBlack = 0, winsWhite = 0;
 
     if (rank == 0) {
+        int winsBlack = 0, winsWhite = 0;
         int *visitsRecv = new int[maxMoves];
         for (int i = 0; i < NUM_GAMES; ++i) {
             Board board(boardSize);
             while (true) {
                 MCTS::evaluateMoves(&board, visits, iterationsPerProcess);
-                for(int j = 1; j < numProc; ++j) {
-                    MPI_Recv(visitsRecv, maxMoves, MPI_INT, j, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                    for (int k = 0; k < maxMoves; ++k) {
-                        visits[k] += visitsRecv[k];
+                for(int p = 1; p < numProc; ++p) {
+                    MPI_Recv(visitsRecv, maxMoves, MPI_INT, p, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                    for (int j = 0; j < maxMoves; ++j) {
+                        visits[j] += visitsRecv[j];
                     }
                 }
                 int chosenMove = -1, maxVisits = -1;
@@ -49,8 +49,6 @@ int main(int argc, char *argv[]) {
                 else {
                     board.applyMove(Position((chosenMove-1)/boardSize, (chosenMove-1)%boardSize));
                 }
-                //board.printBoard();
-                //cout << "\n";
                 if (!board.isOngoing()) {
                     cout << "Game " << i << " finished\n";
                     if (board.getStatus(NULL, NULL) == Board::P1) {
@@ -59,8 +57,6 @@ int main(int argc, char *argv[]) {
                     else {
                         winsWhite++;
                     }
-                    bool stop = (i == NUM_GAMES - 1);
-                    MPI_Bcast(&stop, 1, MPI_CXX_BOOL, 0, MPI_COMM_WORLD);
                     break;
                 }
             } 
@@ -69,27 +65,21 @@ int main(int argc, char *argv[]) {
         delete[] visitsRecv;
     }
     else {
-        Board board(boardSize);
         int chosenMove;
-        bool stop;
-        
-        while (true) {
-            MCTS::evaluateMoves(&board, visits, iterationsPerProcess);
-            MPI_Send(visits, maxMoves, MPI_INT, 0, 0, MPI_COMM_WORLD);
-            MPI_Bcast(&chosenMove, 1, MPI_INT, 0, MPI_COMM_WORLD);
-            if (chosenMove == 0) {
-                board.applyMove(Position(-1, -1));
-            }
-            else {
-                board.applyMove(Position((chosenMove-1)/boardSize, (chosenMove-1)%boardSize));
-            }
-            if (!board.isOngoing()) {
-                MPI_Bcast(&stop, 1, MPI_CXX_BOOL, 0, MPI_COMM_WORLD);
-                if (stop) {
-                    break;
+        for (int i = 0; i < NUM_GAMES; ++i) {
+            Board board(boardSize);
+            while (true) {
+                MCTS::evaluateMoves(&board, visits, iterationsPerProcess);
+                MPI_Send(visits, maxMoves, MPI_INT, 0, 0, MPI_COMM_WORLD);
+                MPI_Bcast(&chosenMove, 1, MPI_INT, 0, MPI_COMM_WORLD);
+                if (chosenMove == 0) {
+                    board.applyMove(Position(-1, -1));
                 }
                 else {
-                    board = Board(boardSize);
+                    board.applyMove(Position((chosenMove-1)/boardSize, (chosenMove-1)%boardSize));
+                }
+                if (!board.isOngoing()) {
+                    break;
                 }
             }
         }

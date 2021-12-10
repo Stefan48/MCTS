@@ -125,6 +125,7 @@ bool operator==(const Board &b1, const Board &b2)
     }
     return Board::equalBoards(b1.board, b2.board, b1.boardSize);
 }
+
 int** Board::getBoard() {
     return board;
 }
