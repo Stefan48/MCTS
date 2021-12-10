@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
             while (ongoing) {
                 MCTS::evaluateMoves(&board, &visits, iterationsPerThread, &seed);
                 #pragma omp barrier
-                /* wait for master thread to decide and apply the overall best move */
+                /* wait for master thread to decide and apply the chosen move */
                 #pragma omp barrier
             }
         }

@@ -45,10 +45,16 @@ int main(int argc, char *argv[]) {
     unsigned int seed = time(NULL) + rank * MAX_THREADS;
     Board board;
     bool ongoing;
-    int maxMoves = BOARD_SIZE * BOARD_SIZE + 1;
+    int boardSize = BOARD_SIZE;
+    int maxMoves = boardSize * boardSize + 1;
     vector< atomic<int> > visits;
-    int numThreads = get_nprocs();
-    cout << "rank=" << rank << " numThreads=" << numThreads << "\n";
+    int numThreads;
+    if (argc > 1) {
+        numThreads = atoi(argv[1]);
+    }
+    else {
+        numThreads = get_nprocs();
+    }
     
     int iterationsPerThread = ITERATIONS_PER_MOVE / (numProc * numThreads) + 1;
     pthread_t threads[numThreads-1];
@@ -69,7 +75,7 @@ int main(int argc, char *argv[]) {
     if (rank == 0) {
         int winsBlack = 0, winsWhite = 0;
         int *visitsRecv = new int[maxMoves];
-        board = Board(BOARD_SIZE);
+        board = Board(boardSize);
         ongoing = true;
         visits = vector< atomic<int> >(maxMoves);
         pthread_barrier_wait(&barrier);
@@ -95,10 +101,8 @@ int main(int argc, char *argv[]) {
                     board.applyMove(Position(-1, -1));
                 }
                 else {
-                    board.applyMove(Position((chosenMove-1)/board.getBoardSize(), (chosenMove-1)%board.getBoardSize()));
+                    board.applyMove(Position((chosenMove-1)/boardSize, (chosenMove-1)%boardSize));
                 }
-                //board.printBoard();
-                //cout << "\n";
                 ongoing = board.isOngoing();
                 if (ongoing) {
                     visits = vector< atomic<int> >(maxMoves);
@@ -113,15 +117,9 @@ int main(int argc, char *argv[]) {
                         winsWhite++;
                     }
                     if (i < NUM_GAMES - 1) {
-                        bool stop = false;
-                        MPI_Bcast(&stop, 1, MPI_CXX_BOOL, 0, MPI_COMM_WORLD);
-                        board = Board(BOARD_SIZE);
+                        board = Board(boardSize);
                         ongoing = true;
                         visits = vector< atomic<int> >(maxMoves);
-                    }
-                    else {
-                        bool stop = true;
-                        MPI_Bcast(&stop, 1, MPI_CXX_BOOL, 0, MPI_COMM_WORLD);
                     }
                     pthread_barrier_wait(&barrier);
                     break;
@@ -137,11 +135,10 @@ int main(int argc, char *argv[]) {
         if (differentSizes) {
             visitsSend = new int[maxMoves];
         }
-        board = Board(BOARD_SIZE);
+        board = Board(boardSize);
         ongoing = true;
         visits = vector< atomic<int> >(maxMoves);
         int chosenMove;
-        bool stop;
         pthread_barrier_wait(&barrier);
         for (int i = 0; i < NUM_GAMES; ++i) {
             while (true) {
@@ -161,7 +158,7 @@ int main(int argc, char *argv[]) {
                     board.applyMove(Position(-1, -1));
                 }
                 else {
-                    board.applyMove(Position((chosenMove-1)/board.getBoardSize(), (chosenMove-1)%board.getBoardSize()));
+                    board.applyMove(Position((chosenMove-1)/boardSize, (chosenMove-1)%boardSize));
                 }
                 ongoing = board.isOngoing();
                 if (ongoing) {
@@ -169,9 +166,8 @@ int main(int argc, char *argv[]) {
                     pthread_barrier_wait(&barrier);
                 }
                 else {
-                    MPI_Bcast(&stop, 1, MPI_CXX_BOOL, 0, MPI_COMM_WORLD);
-                    if (!stop) {
-                        board = Board(BOARD_SIZE);
+                    if (i < NUM_GAMES - 1) {
+                        board = Board(boardSize);
                         ongoing = true;
                         visits = vector< atomic<int> >(maxMoves);
                     }
