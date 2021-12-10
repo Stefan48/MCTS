@@ -45,12 +45,7 @@ public:
     void setBoard(int **board);
     int getBoardSize();
     int getPlayerTurn();
-    void setPlayerTurn(int playerTurn);
     int getCurrentOpponent();
-    int **getPrevBoard();
-    void setPrevBoard(int **prevBoard);
-    int getPasses();
-    void setPasses(int passes);
     bool isOngoing();
     int getStatus(float *blackScore, float *whiteScore);
     void printBoard();

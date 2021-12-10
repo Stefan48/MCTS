@@ -38,7 +38,8 @@ int main(int argc, char *argv[]) {
     unsigned int seed = time(NULL);
     Board board;
     bool ongoing;
-    int maxMoves = BOARD_SIZE * BOARD_SIZE + 1;
+    int boardSize = BOARD_SIZE;
+    int maxMoves = boardSize * boardSize + 1;
     vector< atomic<int> > visits;
     int numThreads;
     if (argc > 1) {
@@ -64,7 +65,7 @@ int main(int argc, char *argv[]) {
     }
 
     int winsBlack = 0, winsWhite = 0;
-    board = Board(BOARD_SIZE);
+    board = Board(boardSize);
     ongoing = true;
     visits = vector< atomic<int> >(maxMoves);
     pthread_barrier_wait(&barrier);
@@ -83,7 +84,7 @@ int main(int argc, char *argv[]) {
                 board.applyMove(Position(-1, -1));
             }
             else {
-                board.applyMove(Position((chosenMove-1)/board.getBoardSize(), (chosenMove-1)%board.getBoardSize()));
+                board.applyMove(Position((chosenMove-1)/boardSize, (chosenMove-1)%boardSize));
             }
             ongoing = board.isOngoing();
             if (ongoing) {
@@ -99,7 +100,7 @@ int main(int argc, char *argv[]) {
                     winsWhite++;
                 }
                 if (i < NUM_GAMES - 1) {
-                    board = Board(BOARD_SIZE);
+                    board = Board(boardSize);
                     ongoing = true;
                     visits = vector< atomic<int> >(maxMoves);
                 }

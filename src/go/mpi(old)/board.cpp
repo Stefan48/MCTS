@@ -125,7 +125,6 @@ bool operator==(const Board &b1, const Board &b2)
     }
     return Board::equalBoards(b1.board, b2.board, b1.boardSize);
 }
-
 int** Board::getBoard() {
     return board;
 }
@@ -138,8 +137,13 @@ int Board::getBoardSize() {
     return boardSize;
 }
 
+
 int Board::getPlayerTurn() {
     return playerTurn;
+}
+
+void Board::setPlayerTurn(int playerTurn) {
+    this->playerTurn = playerTurn;
 }
 
 void Board::togglePlayerTurn() {
@@ -148,6 +152,22 @@ void Board::togglePlayerTurn() {
 
 int Board::getCurrentOpponent() {
     return Board::getOpponent(playerTurn);
+}
+
+int** Board::getPrevBoard() {
+    return prevBoard;
+}
+
+void Board::setPrevBoard(int **prevBoard) {
+    this->prevBoard = prevBoard;
+}
+
+int Board::getPasses() {
+    return passes;
+}
+
+void Board::setPasses(int passes) {
+    this->passes = passes;
 }
 
 bool Board::isOngoing() {
