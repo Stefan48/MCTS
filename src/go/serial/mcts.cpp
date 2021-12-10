@@ -43,12 +43,6 @@ Position MCTS::getNextMove(Board *board, int numIterations) {
     Node *root = new Node(new Board(*board));
     /* could be limited by time */
     for (int i = 0; i < numIterations; ++i) {
-
-        /*vector<Node*> children = root->getChildren();
-        for (int i = 0; i < children.size(); ++i) {
-            cout << i << ": " << children[i]->getUctValue() << "\n";
-        }*/
-
         /* 1 - Selection */
         Node *promisingNode = selectPromisingNode(root);
         /* 2 - Expansion */
@@ -62,13 +56,6 @@ Position MCTS::getNextMove(Board *board, int numIterations) {
         /* 4 - Backpropagation */
         backpropagate(nodeToExplore, result);
     }
-
-    /*vector<Node*> children = root->getChildren();
-    for (auto it = children.begin(); it != children.end(); ++it) {
-        cout << (*it)->getWins() << "/" << (*it)->getVisits() << "\t";
-    }
-    cout << "\n";*/
-
     Position bestMove = root->getChildWithMaxVisits()->getLastMove();
     Node::freeNode(root);
     return bestMove;
